@@ -12,7 +12,14 @@ interface PickersShortcutsItemGetValueParams<TValue> {
 export interface PickersShortcutsItem<TValue> {
   label: string;
   getValue: (params: PickersShortcutsItemGetValueParams<TValue>) => TValue;
+  /**
+   * Identifier of the shortcut.
+   * If provided, it will be used as the key of the shortcut.
+   */
+  id?: string;
 }
+
+export type PickersShortcutsItemContext = Omit<PickersShortcutsItem<unknown>, 'getValue'>;
 
 export type PickerShortcutChangeImportance = 'set' | 'accept';
 
@@ -20,7 +27,7 @@ export interface ExportedPickersShortcutProps<TValue> extends Omit<ListProps, 'o
   /**
    * Ordered array of shortcuts to display.
    * If empty, does not display the shortcuts.
-   * @default `[]`
+   * @default []
    */
   items?: PickersShortcutsItem<TValue>[];
   /**
@@ -34,24 +41,38 @@ export interface ExportedPickersShortcutProps<TValue> extends Omit<ListProps, 'o
 
 export interface PickersShortcutsProps<TValue> extends ExportedPickersShortcutProps<TValue> {
   isLandscape: boolean;
-  onChange: (newValue: TValue, changeImportance?: PickerShortcutChangeImportance) => void;
+  onChange: (
+    newValue: TValue,
+    changeImportance: PickerShortcutChangeImportance,
+    shortcut: PickersShortcutsItemContext,
+  ) => void;
   isValid: (value: TValue) => boolean;
 }
 
+/**
+ * Demos:
+ *
+ * - [Shortcuts](https://mui.com/x/react-date-pickers/shortcuts/)
+ *
+ * API:
+ *
+ * - [PickersShortcuts API](https://mui.com/x/api/date-pickers/pickers-shortcuts/)
+ */
 function PickersShortcuts<TValue>(props: PickersShortcutsProps<TValue>) {
-  const { items, changeImportance, isLandscape, onChange, isValid, ...other } = props;
+  const { items, changeImportance = 'accept', isLandscape, onChange, isValid, ...other } = props;
 
   if (items == null || items.length === 0) {
     return null;
   }
 
-  const resolvedItems = items.map((item) => {
-    const newValue = item.getValue({ isValid });
+  const resolvedItems = items.map(({ getValue, ...item }) => {
+    const newValue = getValue({ isValid });
 
     return {
+      ...item,
       label: item.label,
       onClick: () => {
-        onChange(newValue, changeImportance);
+        onChange(newValue, changeImportance, item);
       },
       disabled: !isValid(newValue),
     };
@@ -72,7 +93,7 @@ function PickersShortcuts<TValue>(props: PickersShortcutsProps<TValue>) {
     >
       {resolvedItems.map((item) => {
         return (
-          <ListItem key={item.label}>
+          <ListItem key={item.id ?? item.label}>
             <Chip {...item} />
           </ListItem>
         );
@@ -84,7 +105,7 @@ function PickersShortcuts<TValue>(props: PickersShortcutsProps<TValue>) {
 PickersShortcuts.propTypes = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
-  // | To update them edit the TypeScript types and run "yarn proptypes"  |
+  // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
   /**
    * Importance of the change when picking a shortcut:
@@ -94,6 +115,7 @@ PickersShortcuts.propTypes = {
    */
   changeImportance: PropTypes.oneOf(['accept', 'set']),
   className: PropTypes.string,
+  component: PropTypes.elementType,
   /**
    * If `true`, compact vertical padding designed for keyboard and mouse input is used for
    * the list and list items.
@@ -111,11 +133,12 @@ PickersShortcuts.propTypes = {
   /**
    * Ordered array of shortcuts to display.
    * If empty, does not display the shortcuts.
-   * @default `[]`
+   * @default []
    */
   items: PropTypes.arrayOf(
     PropTypes.shape({
       getValue: PropTypes.func.isRequired,
+      id: PropTypes.string,
       label: PropTypes.string.isRequired,
     }),
   ),

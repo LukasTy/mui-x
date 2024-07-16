@@ -1,8 +1,27 @@
+import * as React from 'react';
 import { SxProps } from '@mui/system';
 import { Theme } from '@mui/material/styles';
 import { MonthCalendarClasses } from './monthCalendarClasses';
 import { BaseDateValidationProps, MonthValidationProps } from '../internals/models/validation';
-import { TimezoneProps } from '../models';
+import { PickerValidDate, TimezoneProps } from '../models';
+import type { PickersMonthProps } from './PickersMonth';
+import { SlotComponentPropsFromProps } from '../internals/models/helpers';
+
+export interface MonthCalendarSlots {
+  /**
+   * Button displayed to render a single month in the "month" view.
+   * @default MonthCalendarButton
+   */
+  monthButton?: React.ElementType;
+}
+
+export interface MonthCalendarSlotProps {
+  monthButton?: SlotComponentPropsFromProps<
+    React.HTMLAttributes<HTMLButtonElement> & { sx: SxProps },
+    {},
+    PickersMonthProps
+  >;
+}
 
 export interface ExportedMonthCalendarProps {
   /**
@@ -11,20 +30,27 @@ export interface ExportedMonthCalendarProps {
    */
   monthsPerRow?: 3 | 4;
 }
-export interface MonthCalendarProps<TDate>
+export interface MonthCalendarProps<TDate extends PickerValidDate>
   extends ExportedMonthCalendarProps,
     MonthValidationProps<TDate>,
     BaseDateValidationProps<TDate>,
     TimezoneProps {
   autoFocus?: boolean;
-  /**
-   * className applied to the root element.
-   */
   className?: string;
   /**
    * Override or extend the styles applied to the component.
    */
   classes?: Partial<MonthCalendarClasses>;
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
+  slots?: MonthCalendarSlots;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
+  slotProps?: MonthCalendarSlotProps;
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
@@ -43,7 +69,7 @@ export interface MonthCalendarProps<TDate>
   defaultValue?: TDate | null;
   /**
    * The date used to generate the new value when both `value` and `defaultValue` are empty.
-   * @default The closest valid month using the validation props, except callbacks such as `shouldDisableDate`.
+   * @default The closest valid month using the validation props, except callbacks such as `shouldDisableMonth`.
    */
   referenceDate?: TDate;
   /**
@@ -62,4 +88,5 @@ export interface MonthCalendarProps<TDate>
   onMonthFocus?: (month: number) => void;
   hasFocus?: boolean;
   onFocusedViewChange?: (hasFocus: boolean) => void;
+  gridLabelId?: string;
 }

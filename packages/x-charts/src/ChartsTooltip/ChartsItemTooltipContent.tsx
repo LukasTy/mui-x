@@ -1,18 +1,16 @@
 import * as React from 'react';
 import { SxProps, Theme } from '@mui/material/styles';
+import { useSlotProps } from '@mui/base/utils';
 import { ItemInteractionData } from '../context/InteractionProvider';
-import { SeriesContext } from '../context/SeriesContextProvider';
 import { ChartSeriesDefaultized, ChartSeriesType } from '../models/seriesType/config';
-import {
-  ChartsTooltipTable,
-  ChartsTooltipCell,
-  ChartsTooltipMark,
-  ChartsTooltipPaper,
-  ChartsTooltipRow,
-} from './ChartsTooltipTable';
-import { ChartsTooltipClasses } from './tooltipClasses';
+import { ChartsTooltipClasses } from './chartsTooltipClasses';
+import { DefaultChartsItemTooltipContent } from './DefaultChartsItemTooltipContent';
+import { useCartesianContext } from '../context/CartesianProvider';
+import { ZAxisContext } from '../context/ZAxisContextProvider';
+import { useColorProcessor } from '../hooks/useColor';
+import { useSeries } from '../hooks/useSeries';
 
-export type ChartsItemContentProps<T extends ChartSeriesType> = {
+export interface ChartsItemContentProps<T extends ChartSeriesType> {
   /**
    * The data used to identify the triggered item.
    */
@@ -25,55 +23,63 @@ export type ChartsItemContentProps<T extends ChartSeriesType> = {
    * Override or extend the styles applied to the component.
    */
   classes: ChartsTooltipClasses;
+  /**
+   * Get the color of the item with index `dataIndex`.
+   * @param {number} dataIndex The data index of the item.
+   * @returns {string} The color to display.
+   */
+  getColor: (dataIndex: number) => string;
   sx?: SxProps<Theme>;
-};
-
-export function DefaultChartsItemContent<T extends ChartSeriesType>(
-  props: ChartsItemContentProps<T>,
-) {
-  const { series, itemData, sx, classes } = props;
-
-  if (itemData.dataIndex === undefined) {
-    return null;
-  }
-
-  const displayedLabel = series.label ?? null;
-  const color = series.color;
-  // TODO: Manage to let TS understand series.data and series.valueFormatter are coherent
-  // @ts-ignore
-  const formattedValue = series.valueFormatter(series.data[itemData.dataIndex]);
-  return (
-    <ChartsTooltipPaper sx={sx} variant="outlined" className={classes.root}>
-      <ChartsTooltipTable>
-        <tbody>
-          <ChartsTooltipRow>
-            <ChartsTooltipCell className={classes.markCell}>
-              <ChartsTooltipMark ownerState={{ color }} />
-            </ChartsTooltipCell>
-
-            <ChartsTooltipCell className={classes.labelCell}>{displayedLabel}</ChartsTooltipCell>
-
-            <ChartsTooltipCell className={classes.valueCell}>{formattedValue}</ChartsTooltipCell>
-          </ChartsTooltipRow>
-        </tbody>
-      </ChartsTooltipTable>
-    </ChartsTooltipPaper>
-  );
 }
 
-export function ChartsItemTooltipContent<T extends ChartSeriesType>(props: {
+export interface ChartsItemTooltipContentProps<T extends ChartSeriesType> {
   itemData: ItemInteractionData<T>;
   content?: React.ElementType<ChartsItemContentProps<T>>;
+  contentProps?: Partial<ChartsItemContentProps<T>>;
   sx?: SxProps<Theme>;
   classes: ChartsItemContentProps<T>['classes'];
-}) {
-  const { content, itemData, sx, classes } = props;
-
-  const series = React.useContext(SeriesContext)[itemData.type]!.series[
-    itemData.seriesId
-  ] as ChartSeriesDefaultized<T>;
-
-  const Content = content ?? DefaultChartsItemContent<T>;
-
-  return <Content itemData={itemData} series={series} sx={sx} classes={classes} />;
 }
+
+/**
+ * @ignore - internal component.
+ */
+function ChartsItemTooltipContent<T extends ChartSeriesType>(
+  props: ChartsItemTooltipContentProps<T>,
+) {
+  const { content, itemData, sx, classes, contentProps } = props;
+
+  const series = useSeries()[itemData.type]!.series[itemData.seriesId] as ChartSeriesDefaultized<T>;
+
+  const { xAxis, yAxis, xAxisIds, yAxisIds } = useCartesianContext();
+  const { zAxis, zAxisIds } = React.useContext(ZAxisContext);
+  const colorProcessors = useColorProcessor();
+
+  const xAxisKey = (series as any).xAxisKey ?? xAxisIds[0];
+  const yAxisKey = (series as any).yAxisKey ?? yAxisIds[0];
+  const zAxisKey = (series as any).zAxisKey ?? zAxisIds[0];
+
+  const getColor =
+    colorProcessors[series.type]?.(
+      series as any,
+      xAxisKey && xAxis[xAxisKey],
+      yAxisKey && yAxis[yAxisKey],
+      zAxisKey && zAxis[zAxisKey],
+    ) ?? (() => '');
+
+  const Content = content ?? DefaultChartsItemTooltipContent;
+  const chartTooltipContentProps = useSlotProps({
+    elementType: Content,
+    externalSlotProps: contentProps,
+    additionalProps: {
+      itemData,
+      series,
+      sx,
+      classes,
+      getColor,
+    },
+    ownerState: {},
+  });
+  return <Content {...chartTooltipContentProps} />;
+}
+
+export { ChartsItemTooltipContent };

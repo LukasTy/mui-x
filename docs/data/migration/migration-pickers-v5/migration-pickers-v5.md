@@ -1,16 +1,18 @@
-# Migration from v5 to v6
+---
+productId: x-date-pickers
+---
 
-<!-- #default-branch-switch -->
+# Migration from v5 to v6
 
 <p class="description">This guide describes the changes needed to migrate the Date and Time Pickers from v5 to v6.</p>
 
 ## Introduction
 
-To get started, check out [the blog post about the release of MUI X v6](https://mui.com/blog/mui-x-v6/).
+To get started, check out [the blog post about the release of MUI X v6](https://mui.com/blog/mui-x-v6/).
 
 ## Start using the new release
 
-In `package.json`, change the version of the date pickers package to `latest` or `^6.0.0`.
+In `package.json`, change the version of the date pickers package to `^6.0.0`.
 
 ```diff
 -"@mui/x-date-pickers": "5.X.X",
@@ -27,15 +29,15 @@ The `preset-safe` codemod will automatically adjust the bulk of your code to acc
 
 You can either run it on a specific file, folder, or your entire codebase when choosing the `<path>` argument.
 
-```sh
+```bash
 // Date and Time Pickers specific
-npx @mui/x-codemod v6.0.0/pickers/preset-safe <path>
+npx @mui/x-codemod@latest v6.0.0/pickers/preset-safe <path>
 // Target Data Grid as well
-npx @mui/x-codemod v6.0.0/preset-safe <path>
+npx @mui/x-codemod@latest v6.0.0/preset-safe <path>
 ```
 
 :::info
-If you want to run the transformers one by one, check out the transformers included in the [preset-safe codemod for pickers](https://github.com/mui/mui-x/blob/master/packages/x-codemod/README.md#preset-safe-for-pickers) for more details.
+If you want to run the transformers one by one, check out the transformers included in the [preset-safe codemod for pickers](https://github.com/mui/mui-x/blob/HEAD/packages/x-codemod/README.md#preset-safe-for-pickers-v600) for more details.
 :::
 
 Breaking changes that are handled by this codemod are denoted by a ✅ emoji in the table of contents on the right side of the screen.
@@ -185,11 +187,14 @@ Either rename the prop to the newly added, but deprecated `shouldDisableClock` o
 The codemod will take care of renaming the prop to keep the existing functionality but feel free to update to the new `shouldDisableTime` prop on your own.
 
 ```diff
+ // ℹ️ Rename and keep using the deprecated prop
+ // This is the change that the codemod will apply
  <DateTimePicker
 -  shouldDisableTime={(timeValue, view) => view === 'hours' && timeValue < 12}
 +  shouldDisableClock={(timeValue, view) => view === 'hours' && timeValue < 12}
  />
 
+ // ✅ Update your code to use the provided date value parameter instead of a number
  <DateTimePicker
 -  shouldDisableTime={(timeValue, view) => view === 'hours' && timeValue < 12}
 +  shouldDisableTime={(value, view) => view === 'hours' && value.hour() < 12}
@@ -263,7 +268,7 @@ The codemod will take care of renaming the prop to keep the existing functionali
 
 In v5, it was possible to import adapters either from either `@date-io` or `@mui/x-date-pickers` which were the same.
 In v6, the adapters are extended by `@mui/x-date-pickers` to support [fields components](/x/react-date-pickers/fields/).
-Which means adapters can not be imported from `@date-io` anymore. They need to be imported from `@mui/x-date-pickers` or `@mui/x-date-pickers-pro`.
+Which means adapters cannot be imported from `@date-io` anymore. They need to be imported from `@mui/x-date-pickers` or `@mui/x-date-pickers-pro`.
 Otherwise, some methods will be missing.
 If you do not find the adapter you were using—there probably was a reason for it, but you can raise an issue expressing interest in it.
 
@@ -442,7 +447,7 @@ The `locale` prop of the `LocalizationProvider` component have been renamed `ada
 All the props used to pass props to parts of the UI (e.g: pass a prop to the input) have been replaced by component slot props.
 All the props used to override parts of the UI (e.g: pass a custom day renderer) have been replaced by component slots.
 
-You can find more information about this pattern in the [Base UI documentation](https://mui.com/base-ui/getting-started/usage/#shared-props).
+You can find more information about this pattern in the [Base UI documentation](https://mui.com/base-ui/getting-started/usage/#shared-props).
 
 These changes apply to all the components that had the prop.
 For example, the `ToolbarComponent` has been replaced by a `Toolbar` component slot on all pickers.
@@ -934,16 +939,28 @@ Component name changes are also reflected in `themeAugmentation`:
  });
 ```
 
+## Behavior of field `onChange` props
+
+Since the masked input has been replaced by [fields](/x/react-date-pickers/fields/#fields-to-edit-a-single-element) the input value is valid most of the time.
+
+In v5, the user had to delete a character and type in another character to update the date resulting in `onChange` being called twice.
+Firstly with deleted character, and then with the complete date again.
+
+In v6, user can override the field section, so `onChange` is called at nearly every key pressed.
+
+If you were relying on `onChange` to send server requests, you might be interested in debouncing it to avoid sending too many requests.
+To do so please refer to the corresponding [docs example](/x/react-date-pickers/lifecycle/#server-interaction).
+
 ## Rename `components` to `slots` (optional)
 
 The `components` and `componentsProps` props are being renamed to `slots` and `slotProps` props respectively.
-This is a slow and ongoing effort between the different MUI libraries.
+This is a slow and ongoing effort between all the different libraries maintained by MUI.
 To smooth the transition, pickers support both the `components` props which are deprecated, and the new `slots` props.
 
 If you would like to use the new API and do not want to see deprecated prop usage, consider running `rename-components-to-slots` codemod handling the prop renaming.
 
-```sh
-npx @mui/x-codemod v6.0.0/pickers/rename-components-to-slots <path>
+```bash
+npx @mui/x-codemod@latest v6.0.0/pickers/rename-components-to-slots <path>
 ```
 
 Take a look at [the RFC](https://github.com/mui/material-ui/issues/33416) for more information.

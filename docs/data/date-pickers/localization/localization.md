@@ -1,24 +1,24 @@
 ---
-product: date-pickers
-title: Date and Time Pickers - Component localization
+productId: x-date-pickers
+title: Date and Time Pickers - Translated components
 components: LocalizationProvider
 githubLabel: 'component: pickers'
 packageName: '@mui/x-date-pickers'
 ---
 
-# Component localization
+# Translated components
 
 <p class="description">Date and Time Pickers support translations between languages.</p>
 
-As with all MUI components, you can modify text and translations inside the Date and Time Pickers.
+As with all MUI X components, you can modify text and translations inside the Date and Time Pickers.
 You can find all the translation keys supported in [the source](https://github.com/mui/mui-x/blob/HEAD/packages/x-date-pickers/src/locales/utils/pickersLocaleTextApi.ts)
 in the GitHub repository.
 
-The default locale of MUI is English (United States). If you want to use other locales, follow the instructions below.
+The default locale of MUI X is English (United States). If you want to use other locales, follow the instructions below.
 
 :::warning
 This page focuses on translating the text inside the Date and Time Pickers.
-If you need to change the formatting of the text to conform to a given locale, visit the [Localized dates](/x/react-date-pickers/adapters-locale/) page.
+If you need to change the formatting of the text to conform to a given locale, visit the [Date format and localization](/x/react-date-pickers/adapters-locale/) page.
 :::
 
 ## Set translations globally
@@ -131,3 +131,17 @@ You can [find the source](https://github.com/mui/mui-x/tree/HEAD/packages/x-date
 
 To create your own translation or to customize the English text, copy this file to your project, make any changes needed and import the locale from there.
 Note that these translations of the date and time picker components depend on the [Localization strategy](/material-ui/guides/localization/) of the whole library.
+
+## Access the translations in slots and subcomponents
+
+You can use the `usePickersTranslations` hook to access the translations in your custom components.
+
+```tsx
+import { usePickersTranslations } from '@mui/x-date-pickers/hooks';
+
+const translations = usePickersTranslations();
+```
+
+:::info
+See [Custom slots and subcomponents—Action bar](/x/react-date-pickers/custom-components/#component) for more details.
+:::

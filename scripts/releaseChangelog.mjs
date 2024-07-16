@@ -1,22 +1,23 @@
 /* eslint-disable no-restricted-syntax */
 import { Octokit } from '@octokit/rest';
 import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 const GIT_ORGANIZATION = 'mui';
 const GIT_REPO = 'mui-x';
 
 /**
  * @param {string} commitMessage
- * @returns {string} The tags in lowercases, ordered ascending and commaseparated
+ * @returns {string} The tags in lowercases, ordered ascending and comma-separated
  */
 function parseTags(commitMessage) {
-  const tagMatch = commitMessage.match(/^(\[[\w-]+\])+/);
+  const tagMatch = commitMessage.match(/^(\[[\w- ]+\])+/);
   if (tagMatch === null) {
     return '';
   }
   const [tagsWithBracketDelimiter] = tagMatch;
   return tagsWithBracketDelimiter
-    .match(/([\w-]+)/g)
+    .match(/([\w- ]+)/g)
     .map((tag) => {
       return tag;
     })
@@ -40,6 +41,23 @@ async function findLatestTaggedVersion(octokit) {
   // fetch tags from the GitHub API and return the last one
   const { data } = await octokit.request(`GET /repos/${GIT_ORGANIZATION}/${GIT_REPO}/tags`);
   return data[0].name.trim();
+}
+
+function resolvePackagesByLabels(labels) {
+  const resolvedPackages = [];
+  labels.forEach((label) => {
+    switch (label.name) {
+      case 'component: data grid':
+        resolvedPackages.push('DataGrid');
+        break;
+      case 'component: pickers':
+        resolvedPackages.push('pickers');
+        break;
+      default:
+        break;
+    }
+  });
+  return resolvedPackages;
 }
 
 async function main(argv) {
@@ -89,6 +107,7 @@ async function main(argv) {
   // Fetch all the pull Request and check if there is a section named changelog
 
   const changeLogMessages = [];
+  const prsLabelsMap = {};
   await Promise.all(
     commitsItems.map(async (commitsItem) => {
       const searchPullRequestId = commitsItem.commit.message.match(/\(#([0-9]+)\)/);
@@ -97,12 +116,14 @@ async function main(argv) {
       }
 
       const {
-        data: { body: bodyMessage },
+        data: { body: bodyMessage, labels },
       } = await octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
         owner: GIT_ORGANIZATION,
         repo: GIT_REPO,
         pull_number: Number(searchPullRequestId[1]),
       });
+
+      prsLabelsMap[commitsItem.sha] = labels;
 
       if (!bodyMessage) {
         return;
@@ -131,8 +152,12 @@ async function main(argv) {
 
   // Dispatch commits in different sections
   const dataGridCommits = [];
+  const dataGridProCommits = [];
+  const dataGridPremiumCommits = [];
   const pickersCommits = [];
+  const pickersProCommits = [];
   const chartsCommits = [];
+  const treeViewCommits = [];
   const coreCommits = [];
   const docsCommits = [];
   const otherCommits = [];
@@ -140,24 +165,36 @@ async function main(argv) {
 
   commitsItems.forEach((commitItem) => {
     const tag = parseTags(commitItem.commit.message);
-    switch (tag) {
+    // for now we use only one parsed tag
+    const firstTag = tag.split(',')[0];
+    switch (firstTag) {
       case 'DataGrid':
-      case 'DataGridPro':
-      case 'DataGridPremium':
-      case 'l10n':
-      case '118n':
+      case 'data grid':
         dataGridCommits.push(commitItem);
+        break;
+      case 'DataGridPro':
+        dataGridProCommits.push(commitItem);
+        break;
+      case 'DataGridPremium':
+        dataGridPremiumCommits.push(commitItem);
         break;
       case 'DatePicker':
       case 'TimePicker':
       case 'DateTimePicker':
-      case 'DateRangePicker':
       case 'pickers':
       case 'fields':
         pickersCommits.push(commitItem);
         break;
+      case 'DateRangePicker':
+      case 'DateTimeRangePicker':
+        pickersProCommits.push(commitItem);
+        break;
       case 'charts':
         chartsCommits.push(commitItem);
+        break;
+      case 'TreeView':
+      case 'tree view':
+        treeViewCommits.push(commitItem);
         break;
       case 'docs':
         docsCommits.push(commitItem);
@@ -168,6 +205,27 @@ async function main(argv) {
       case 'codemod':
         codemodCommits.push(commitItem);
         break;
+      case 'l10n':
+      case '118n': {
+        const prLabels = prsLabelsMap[commitItem.sha];
+        const resolvedPackages = resolvePackagesByLabels(prLabels);
+        if (resolvedPackages.length > 0) {
+          resolvedPackages.forEach((resolvedPackage) => {
+            switch (resolvedPackage) {
+              case 'DataGrid':
+                dataGridCommits.push(commitItem);
+                break;
+              case 'pickers':
+                pickersCommits.push(commitItem);
+                break;
+              default:
+                coreCommits.push(commitItem);
+                break;
+            }
+          });
+        }
+        break;
+      }
       default:
         otherCommits.push(commitItem);
         break;
@@ -213,20 +271,53 @@ We'd like to offer a big thanks to the ${
 
 TODO INSERT HIGHLIGHTS
 ${changeLogMessages.length > 0 ? '\n\n' : ''}${changeLogMessages.join('\n')}
-### \`@mui/x-data-grid@v__VERSION__\` / \`@mui/x-data-grid-pro@v__VERSION__\` / \`@mui/x-data-grid-premium@v__VERSION__\`
-${logChangelogSection(dataGridCommits, '#### Changes')}
 
-### \`@mui/x-date-pickers@v__VERSION__\` / \`@mui/x-date-pickers-pro@v__VERSION__\`
-${logChangelogSection(pickersCommits, '#### Changes')}
+<!--/ HIGHLIGHT_ABOVE_SEPARATOR /-->
 
-### \`@mui/x-charts@v__CHARTS_VERSION__\`
-${logChangelogSection(chartsCommits, '#### Changes')}
-${logChangelogSection(
-  codemodCommits,
-  `### \`@mui/x-codemod@v__VERSION__\`
+### Data Grid
 
-#### Changes`,
-)}
+#### \`@mui/x-data-grid@__VERSION__\`
+
+${logChangelogSection(dataGridCommits)}
+
+#### \`@mui/x-data-grid-pro@__VERSION__\` [![pro](https://mui.com/r/x-pro-svg)](https://mui.com/r/x-pro-svg-link 'Pro plan')
+
+Same changes as in \`@mui/x-data-grid@__VERSION__\`${
+    dataGridProCommits.length > 0 ? ', plus:\n' : '.'
+  }
+${logChangelogSection(dataGridProCommits)}
+
+#### \`@mui/x-data-grid-premium@__VERSION__\` [![premium](https://mui.com/r/x-premium-svg)](https://mui.com/r/x-premium-svg-link 'Premium plan')
+
+Same changes as in \`@mui/x-data-grid-pro@__VERSION__\`${
+    dataGridPremiumCommits.length > 0 ? ', plus:\n' : '.'
+  }
+${logChangelogSection(dataGridPremiumCommits)}${dataGridPremiumCommits.length > 0 ? '\n' : ''}
+### Date and Time Pickers
+
+#### \`@mui/x-date-pickers@__VERSION__\`
+
+${logChangelogSection(pickersCommits)}
+
+#### \`@mui/x-date-pickers-pro@__VERSION__\` [![pro](https://mui.com/r/x-pro-svg)](https://mui.com/r/x-pro-svg-link 'Pro plan')
+
+Same changes as in \`@mui/x-date-pickers@__VERSION__\`${
+    pickersProCommits.length > 0 ? ', plus:\n' : '.'
+  }
+${logChangelogSection(pickersProCommits)}
+
+### Charts
+ 
+#### \`@mui/x-charts@__VERSION__\`
+
+${logChangelogSection(chartsCommits)}
+
+### Tree View
+
+#### \`@mui/x-tree-view@__VERSION__\`
+
+${logChangelogSection(treeViewCommits)}
+${logChangelogSection(codemodCommits, `### \`@mui/x-codemod@__VERSION__\``)}
 ${logChangelogSection(docsCommits, '### Docs')}
 ${logChangelogSection(coreCommits, '### Core')}
 ${logChangelogSection(otherCommits, '')}
@@ -237,7 +328,7 @@ ${logChangelogSection(otherCommits, '')}
   console.log(changelog);
 }
 
-yargs(process.argv.slice(2))
+yargs(hideBin(process.argv))
   .command({
     command: '$0',
     description: 'Creates a changelog',

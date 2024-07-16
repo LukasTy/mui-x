@@ -1,10 +1,19 @@
 import * as React from 'react';
-import { screen, userEvent, describeConformance } from '@mui/monorepo/test/utils';
-import { describeValidation } from '@mui/x-date-pickers/tests/describeValidation';
-import { describeValue } from '@mui/x-date-pickers/tests/describeValue';
-import { createPickerRenderer, adapterToUse, wrapPickerMount } from 'test/utils/pickers-utils';
-import { MultiSectionDigitalClock } from '@mui/x-date-pickers/MultiSectionDigitalClock';
 import { expect } from 'chai';
+import { screen } from '@mui/internal-test-utils';
+import {
+  createPickerRenderer,
+  adapterToUse,
+  multiSectionDigitalClockHandler,
+  describeValidation,
+  describeValue,
+} from 'test/utils/pickers';
+import {
+  MultiSectionDigitalClock,
+  multiSectionDigitalClockClasses as classes,
+} from '@mui/x-date-pickers/MultiSectionDigitalClock';
+import { formatMeridiem } from '@mui/x-date-pickers/internals';
+import { describeConformance } from 'test/utils/describeConformance';
 
 describe('<MultiSectionDigitalClock /> - Describes', () => {
   const { render, clock } = createPickerRenderer({ clock: 'fake' });
@@ -18,22 +27,12 @@ describe('<MultiSectionDigitalClock /> - Describes', () => {
   }));
 
   describeConformance(<MultiSectionDigitalClock />, () => ({
-    classes: {} as any,
+    classes,
+    inheritComponent: 'div',
     render,
     muiName: 'MuiMultiSectionDigitalClock',
-    wrapMount: wrapPickerMount,
     refInstanceof: window.HTMLDivElement,
-    skip: [
-      'componentProp',
-      'componentsProp',
-      'themeDefaultProps',
-      'themeStyleOverrides',
-      'themeVariants',
-      'mergeClassName',
-      'propsSpread',
-      'rootClass',
-      'reactTestRenderer',
-    ],
+    skip: ['componentProp', 'componentsProp', 'themeVariants'],
   }));
 
   describeValue(MultiSectionDigitalClock, () => ({
@@ -41,10 +40,7 @@ describe('<MultiSectionDigitalClock /> - Describes', () => {
     componentFamily: 'multi-section-digital-clock',
     type: 'time',
     variant: 'desktop',
-    values: [
-      adapterToUse.date(new Date(2018, 0, 1, 11, 30)),
-      adapterToUse.date(new Date(2018, 0, 1, 12, 35)),
-    ],
+    values: [adapterToUse.date('2018-01-01T11:30:00'), adapterToUse.date('2018-01-01T12:35:00')],
     emptyValue: null,
     clock,
     assertRenderedValue: (expectedValue: any) => {
@@ -62,28 +58,14 @@ describe('<MultiSectionDigitalClock /> - Describes', () => {
         expect(selectedItems[1]).to.have.text(minutesLabel);
         if (hasMeridiem) {
           expect(selectedItems[2]).to.have.text(
-            adapterToUse.getMeridiemText(adapterToUse.getHours(expectedValue) >= 12 ? 'pm' : 'am'),
+            formatMeridiem(adapterToUse, adapterToUse.getHours(expectedValue) >= 12 ? 'pm' : 'am'),
           );
         }
       }
     },
     setNewValue: (value) => {
       const newValue = adapterToUse.addMinutes(adapterToUse.addHours(value, 1), 5);
-      const hasMeridiem = adapterToUse.is12HourCycleInCurrentLocale();
-      const hoursLabel = parseInt(
-        adapterToUse.format(newValue, hasMeridiem ? 'hours12h' : 'hours24h'),
-        10,
-      );
-      const minutesLabel = adapterToUse.getMinutes(newValue).toString();
-      userEvent.mousePress(screen.getByRole('option', { name: `${hoursLabel} hours` }));
-      userEvent.mousePress(screen.getByRole('option', { name: `${minutesLabel} minutes` }));
-      if (hasMeridiem) {
-        userEvent.mousePress(
-          screen.getByRole('option', {
-            name: adapterToUse.getMeridiemText(adapterToUse.getHours(newValue) >= 12 ? 'pm' : 'am'),
-          }),
-        );
-      }
+      multiSectionDigitalClockHandler.setViewValue(adapterToUse, newValue);
 
       return newValue;
     },

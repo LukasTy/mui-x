@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { LineChart } from '@mui/x-charts/LineChart';
+import { LineChart, lineElementClasses } from '@mui/x-charts/LineChart';
 
 const uData = [4000, 3000, 2000, 2780, 1890, 2390, 3490];
 const xLabels = [
@@ -17,10 +17,10 @@ export default function SimpleAreaChart() {
     <LineChart
       width={500}
       height={300}
-      series={[{ data: uData, label: 'uv', area: true }]}
+      series={[{ data: uData, label: 'uv', area: true, showMark: false }]}
       xAxis={[{ scaleType: 'point', data: xLabels }]}
       sx={{
-        '.MuiLineElement-root, .MuiMarkElement-root': {
+        [`& .${lineElementClasses.root}`]: {
           display: 'none',
         },
       }}

@@ -1,6 +1,7 @@
 ---
-product: charts
 title: Charts - Scatter demonstration
+productId: x-charts
+components: Scatter, ScatterChart, ScatterPlot, ChartsVoronoiHandler
 ---
 
 # Charts - Scatter demonstration
@@ -9,8 +10,8 @@ title: Charts - Scatter demonstration
 
 ## SimpleScatterChart
 
-{{"demo": "SimpleScatterChart.js", "bg": "inline"}}
+{{"demo": "SimpleScatterChart.js"}}
 
 ## MultipleYAxesScatterChart
 
-{{"demo": "MultipleYAxesScatterChart.js", "bg": "inline"}}
+{{"demo": "MultipleYAxesScatterChart.js"}}

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { LineChart } from '@mui/x-charts/LineChart';
+import { LineChart, lineElementClasses } from '@mui/x-charts/LineChart';
 
 const years = [
   new Date(1990, 0, 1),
@@ -58,12 +58,9 @@ export default function CSSCustomization() {
   return (
     <LineChart
       sx={{
-        '& .MuiLineElement-root': {
+        [`& .${lineElementClasses.root}`]: {
           strokeDasharray: '10 5',
           strokeWidth: 4,
-        },
-        '& .MuiMarkElement-root': {
-          display: 'none',
         },
         '& .MuiAreaElement-series-Germany': {
           fill: "url('#myGradient')",
@@ -74,7 +71,7 @@ export default function CSSCustomization() {
           id: 'Years',
           data: years,
           scaleType: 'time',
-          valueFormatter: (date) => date.getFullYear(),
+          valueFormatter: (date) => date.getFullYear().toString(),
         },
       ]}
       series={[
@@ -83,22 +80,26 @@ export default function CSSCustomization() {
           data: FranceGDPperCapita,
           stack: 'total',
           area: true,
+          showMark: false,
         },
         {
           id: 'Germany',
           data: GermanyGDPperCapita,
           stack: 'total',
           area: true,
+          showMark: false,
         },
         {
           id: 'United Kingdom',
           data: UKGDPperCapita,
           stack: 'total',
           area: true,
+          showMark: false,
         },
       ]}
+      margin={{ left: 60, top: 10, right: 20 }}
       width={600}
-      height={400}
+      height={300}
     >
       <defs>
         <linearGradient id="myGradient" gradientTransform="rotate(90)">

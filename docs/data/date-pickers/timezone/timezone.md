@@ -1,6 +1,6 @@
 ---
-product: date-pickers
-title: Date and Time pickers - UTC and timezones
+productId: x-date-pickers
+title: Date and Time Pickers - UTC and timezones
 components: LocalizationProvider
 githubLabel: 'component: pickers'
 packageName: '@mui/x-date-pickers'
@@ -190,7 +190,7 @@ Please check out the documentation of the [UTC and timezone on Luxon](https://mo
 You can then pass your UTC date to your picker:
 
 ```tsx
-import { DateTime, Settings } from 'luxon';
+import { DateTime } from 'luxon';
 
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -240,7 +240,7 @@ Please check out the documentation of the [UTC and timezone on Luxon](https://mo
 You can then pass your date in the wanted timezone to your picker:
 
 ```tsx
-import { DateTime, Settings } from 'luxon';
+import { DateTime } from 'luxon';
 
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -303,7 +303,7 @@ function App() {
 
 ### Moment and timezone
 
-Before using the timezone with Day.js, you have to pass the default export from `moment-timezone` to the `dateLibInstance` prop of `LocalizationProvider`:
+Before using the timezone with Moment, you have to pass the default export from `moment-timezone` to the `dateLibInstance` prop of `LocalizationProvider`:
 
 ```tsx
 import moment from 'moment-timezone';

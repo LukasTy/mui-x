@@ -41,7 +41,7 @@ To enable this behavior, set the `editMode` prop on the Data Grid to `"row"`. No
 ```
 
 The following demo illustrates how row editing works.
-The user can [start](#start-editing) and [stop](#stop-editing) editing a row using the same actions as those provided for cell editing (e.g. double-clicking a cell).
+The user can [start](#start-editing) and [stop](#stop-editing) editing a row using the same actions as those provided for cell editing (for example double-clicking a cell).
 
 {{"demo": "BasicRowEditingGrid.js", "bg": "inline", "defaultCodeOpen": false}}
 
@@ -174,6 +174,24 @@ The value returned is used later as an argument on a call to `apiRef.current.upd
 />
 ```
 
+If you want to delete a row from the internal state of the Data Grid, you can return an additional property `_action: 'delete'` in the row object from the `processRowUpdate` callback. This will remove the row from the internal state of the Data Grid.
+It is a more performant way to delete a row as compared to updating the [`rows` prop](/x/react-data-grid/row-updates/#the-rows-prop) or using `setRows` API method because `processRowUpdate` uses the [`updateRows`](https://mui.com/x/react-data-grid/row-updates/#the-updaterows-method) under the hood which doesn't cause a full regeneration of the row tree.
+
+```tsx
+<DataGrid
+  {...otherProps}
+  processRowUpdate={(updatedRow, originalRow) => {
+    if (shouldDeleteRow(updatedRow)) {
+      return { ...updatedRow, _action: 'delete' };
+    }
+    return updatedRow;
+  }}
+/>
+```
+
+In the example above, `shouldDeleteRow` is a function that determines whether a row should be deleted based on the updated row data.
+If `shouldDeleteRow` returns `true`, the row will be deleted from the Data Grid's internal state.
+
 ### Server-side validation
 
 If you need to cancel the save process on `processRowUpdate`—for instance, when a database validation fails, or the user wants to reject the changes—there are two options:
@@ -212,7 +230,7 @@ You can use the `valueParser` property in the column definition to modify the va
 ```tsx
 const columns: GridColDef[] = [
   {
-    valueParser: (value: any, params: GridCellParams) => {
+    valueParser: (value, row, column, apiRef) => {
       return value.toLowerCase();
     },
   },
@@ -227,9 +245,9 @@ If you are already using a `valueGetter` to extract the value from a nested obje
 ```tsx
 const columns: GridColDef[] = [
   {
-    valueSetter: (params: GridValueSetterParams) => {
-      const [firstName, lastName] = params.value!.toString().split(' ');
-      return { ...params.row, firstName, lastName };
+    valueSetter: (value, row) => {
+      const [firstName, lastName] = value!.toString().split(' ');
+      return { ...row, firstName, lastName };
     },
   },
 ];
@@ -333,11 +351,11 @@ Also, removing one field or row ID from the object will not cause the missing ce
 
 Each of the built-in column types provides a component to edit the value of the cells.
 To customize column types, or override the existing components, you can provide a new edit component through the `renderEditCell` property in the column definition.
-This property works like the `renderCell` property, which is rendered while cells are in view mode.
+This property works like the `renderCell` property, with the difference that it is rendered while cells are in edit mode.
 
 ```tsx
 function CustomEditComponent(props: GridRenderEditCellParams) {
-  return <input type="text" value={params.value} onValueChange={...} />;
+  return <input type="text" value={params.value} onChange={...} />;
 }
 
 const columns: GridColDef[] = [
@@ -362,17 +380,29 @@ Once a new value is entered into the input, it must be sent to the data grid.
 To do this, pass the row ID, the column field, and the new cell value to a call to `apiRef.current.setEditCellValue`.
 The new value will be parsed and validated, and the `value` prop will reflect the changes in the next render.
 
+It's important to also handle the [accessibility](/x/react-data-grid/accessibility/) of custom edit components.
+When a cell enters edit mode, an element must be focused to provide access via keyboard and for screen readers.
+Since multiple cells may be in edit mode at the same time, the `hasFocus` prop will be `true` on the cell that should have focus.
+Use this prop to focus the appropriate element.
+
 ```tsx
 function CustomEditComponent(props: GridRenderEditCellParams) {
-  const { id, value, field } = props;
+  const { id, value, field, hasFocus } = props;
   const apiRef = useGridApiContext();
+  const ref = React.useRef();
+
+  React.useLayoutEffect(() => {
+    if (hasFocus) {
+      ref.current.focus();
+    }
+  }, [hasFocus]);
 
   const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value; // The new value entered by the user
     apiRef.current.setEditCellValue({ id, field, value: newValue });
   };
 
-  return <input type="text" value={value} onChange={handleValueChange} />;
+  return <input ref={ref} type="text" value={value} onChange={handleValueChange} />;
 }
 ```
 
@@ -454,7 +484,13 @@ Instead, use the provided interactions to exit edit mode.
 
 ## Advanced use cases
 
-See [Editing recipes](/x/react-data-grid/recipes-editing/) for more advanced use cases.
+The [Editing recipes](/x/react-data-grid/recipes-editing/) page covers more advanced use cases, such as:
+
+- [Multiline editing](/x/react-data-grid/recipes-editing/#multiline-editing)
+- [Single click editing](/x/react-data-grid/recipes-editing/#single-click-editing)
+- [Bulk editing](/x/react-data-grid/recipes-editing/#bulk-editing)
+- [Conditional validation](/x/react-data-grid/recipes-editing/#conditional-validation)
+- [Linked fields](/x/react-data-grid/recipes-editing/#linked-fields)
 
 ## apiRef
 

@@ -1,13 +1,19 @@
 import * as React from 'react';
 import { InteractionContext } from '../context/InteractionProvider';
-import { CartesianContext } from '../context/CartesianContextProvider';
-import { SVGContext, DrawingContext } from '../context/DrawingProvider';
-import { isBandScale } from './useScale';
+import { useCartesianContext } from '../context/CartesianProvider';
+import { isBandScale } from '../internals/isBandScale';
+import { AxisDefaultized } from '../models/axis';
+import { getSVGPoint } from '../internals/getSVGPoint';
+import { useSvgRef } from './useSvgRef';
+import { useDrawingArea } from './useDrawingArea';
 
+function getAsANumber(value: number | Date) {
+  return value instanceof Date ? value.getTime() : value;
+}
 export const useAxisEvents = (disableAxisListener: boolean) => {
-  const svgRef = React.useContext(SVGContext);
-  const { width, height, top, left } = React.useContext(DrawingContext);
-  const { xAxis, yAxis, xAxisIds, yAxisIds } = React.useContext(CartesianContext);
+  const svgRef = useSvgRef();
+  const { left, top, width, height } = useDrawingArea();
+  const { xAxis, yAxis, xAxisIds, yAxisIds } = useCartesianContext();
   const { dispatch } = React.useContext(InteractionContext);
 
   const usedXAxis = xAxisIds[0];
@@ -25,44 +31,33 @@ export const useAxisEvents = (disableAxisListener: boolean) => {
       return () => {};
     }
 
-    const getUpdateY = (y: number) => {
-      if (usedYAxis === null) {
-        return null;
-      }
-      const { scale: yScale, data: yAxisData } = yAxis[usedYAxis];
-      if (!isBandScale(yScale)) {
-        return { value: yScale.invert(y) };
-      }
-      const dataIndex = Math.floor((y - yScale.range()[0]) / yScale.step());
-      if (dataIndex < 0 || dataIndex >= yAxisData!.length) {
-        return null;
-      }
-      return {
-        index: dataIndex,
-        value: yAxisData![dataIndex],
-      };
-    };
+    function getNewAxisState(axisConfig: AxisDefaultized, mouseValue: number) {
+      const { scale, data: axisData, reverse } = axisConfig;
 
-    const getUpdateX = (x: number) => {
-      if (usedXAxis === null) {
-        return null;
-      }
-      const { scale: xScale, data: xAxisData } = xAxis[usedXAxis];
-      if (!isBandScale(xScale)) {
-        const value = xScale.invert(x);
+      if (!isBandScale(scale)) {
+        const value = scale.invert(mouseValue);
 
-        const closestIndex = xAxisData?.findIndex((v: typeof value, index) => {
-          if (v > value) {
-            // @ts-ignore
-            if (index === 0 || Math.abs(value - v) <= Math.abs(value - xAxisData[index - 1])) {
+        if (axisData === undefined) {
+          return { value };
+        }
+
+        const valueAsNumber = getAsANumber(value);
+        const closestIndex = axisData?.findIndex((pointValue: typeof value, index) => {
+          const v = getAsANumber(pointValue);
+          if (v > valueAsNumber) {
+            if (
+              index === 0 ||
+              Math.abs(valueAsNumber - v) <=
+                Math.abs(valueAsNumber - getAsANumber(axisData[index - 1]))
+            ) {
               return true;
             }
           }
-          if (v <= value) {
+          if (v <= valueAsNumber) {
             if (
-              index === xAxisData.length - 1 ||
-              // @ts-ignore
-              Math.abs(value - v) < Math.abs(value - xAxisData[index + 1])
+              index === axisData.length - 1 ||
+              Math.abs(getAsANumber(value) - v) <
+                Math.abs(getAsANumber(value) - getAsANumber(axisData[index + 1]))
             ) {
               return true;
             }
@@ -71,54 +66,83 @@ export const useAxisEvents = (disableAxisListener: boolean) => {
         });
 
         return {
-          value: closestIndex !== undefined && closestIndex >= 0 ? xAxisData![closestIndex] : value,
+          value: closestIndex !== undefined && closestIndex >= 0 ? axisData![closestIndex] : value,
           index: closestIndex,
         };
       }
 
       const dataIndex =
-        xScale.bandwidth() === 0
-          ? Math.floor((x - xScale.range()[0] + xScale.step() / 2) / xScale.step())
-          : Math.floor((x - xScale.range()[0]) / xScale.step());
-      if (dataIndex < 0 || dataIndex >= xAxisData!.length) {
+        scale.bandwidth() === 0
+          ? Math.floor((mouseValue - Math.min(...scale.range()) + scale.step() / 2) / scale.step())
+          : Math.floor((mouseValue - Math.min(...scale.range())) / scale.step());
+
+      if (dataIndex < 0 || dataIndex >= axisData!.length) {
         return null;
+      }
+      if (reverse) {
+        const reverseIndex = axisData!.length - 1 - dataIndex;
+        return {
+          index: reverseIndex,
+          value: axisData![reverseIndex],
+        };
       }
       return {
         index: dataIndex,
-        value: xAxisData![dataIndex],
+        value: axisData![dataIndex],
       };
-    };
+    }
 
-    const handleMouseOut = () => {
+    const handleOut = () => {
       mousePosition.current = {
         x: -1,
         y: -1,
       };
-      dispatch({ type: 'updateAxis', data: { x: null, y: null } });
+      dispatch({ type: 'exitChart' });
     };
 
-    const handleMouseMove = (event: MouseEvent) => {
+    const handleMove = (event: MouseEvent | TouchEvent) => {
+      const target = 'targetTouches' in event ? event.targetTouches[0] : event;
+      const svgPoint = getSVGPoint(element, target);
+
       mousePosition.current = {
-        x: event.offsetX,
-        y: event.offsetY,
+        x: svgPoint.x,
+        y: svgPoint.y,
       };
-      const outsideX = event.offsetX < left || event.offsetX > left + width;
-      const outsideY = event.offsetY < top || event.offsetY > top + height;
+
+      const outsideX = svgPoint.x < left || svgPoint.x > left + width;
+      const outsideY = svgPoint.y < top || svgPoint.y > top + height;
       if (outsideX || outsideY) {
-        dispatch({ type: 'updateAxis', data: { x: null, y: null } });
+        dispatch({ type: 'exitChart' });
         return;
       }
-      const newStateX = getUpdateX(event.offsetX);
-      const newStateY = getUpdateY(event.offsetY);
+      const newStateX = getNewAxisState(xAxis[usedXAxis], svgPoint.x);
+      const newStateY = getNewAxisState(yAxis[usedYAxis], svgPoint.y);
 
       dispatch({ type: 'updateAxis', data: { x: newStateX, y: newStateY } });
     };
 
-    element.addEventListener('mouseout', handleMouseOut);
-    element.addEventListener('mousemove', handleMouseMove);
+    const handleDown = (event: PointerEvent) => {
+      const target = event.currentTarget;
+      if (!target) {
+        return;
+      }
+
+      if ((target as HTMLElement).hasPointerCapture(event.pointerId)) {
+        (target as HTMLElement).releasePointerCapture(event.pointerId);
+      }
+    };
+
+    element.addEventListener('pointerdown', handleDown);
+    element.addEventListener('pointermove', handleMove);
+    element.addEventListener('pointerout', handleOut);
+    element.addEventListener('pointercancel', handleOut);
+    element.addEventListener('pointerleave', handleOut);
     return () => {
-      element.removeEventListener('mouseout', handleMouseOut);
-      element.removeEventListener('mousemove', handleMouseMove);
+      element.removeEventListener('pointerdown', handleDown);
+      element.removeEventListener('pointermove', handleMove);
+      element.removeEventListener('pointerout', handleOut);
+      element.removeEventListener('pointercancel', handleOut);
+      element.removeEventListener('pointerleave', handleOut);
     };
   }, [
     svgRef,

@@ -1,8 +1,27 @@
+import * as React from 'react';
 import { SxProps } from '@mui/system';
 import { Theme } from '@mui/material/styles';
 import { YearCalendarClasses } from './yearCalendarClasses';
 import { BaseDateValidationProps, YearValidationProps } from '../internals/models/validation';
-import { TimezoneProps } from '../models';
+import { PickerValidDate, TimezoneProps } from '../models';
+import type { PickersYearProps } from './PickersYear';
+import { SlotComponentPropsFromProps } from '../internals/models/helpers';
+
+export interface YearCalendarSlots {
+  /**
+   * Button displayed to render a single year in the "year" view.
+   * @default YearCalendarButton
+   */
+  yearButton?: React.ElementType;
+}
+
+export interface YearCalendarSlotProps {
+  yearButton?: SlotComponentPropsFromProps<
+    React.HTMLAttributes<HTMLButtonElement> & { sx: SxProps },
+    {},
+    PickersYearProps
+  >;
+}
 
 export interface ExportedYearCalendarProps {
   /**
@@ -12,20 +31,27 @@ export interface ExportedYearCalendarProps {
   yearsPerRow?: 3 | 4;
 }
 
-export interface YearCalendarProps<TDate>
+export interface YearCalendarProps<TDate extends PickerValidDate>
   extends ExportedYearCalendarProps,
     YearValidationProps<TDate>,
     BaseDateValidationProps<TDate>,
     TimezoneProps {
   autoFocus?: boolean;
-  /**
-   * className applied to the root element.
-   */
   className?: string;
   /**
    * Override or extend the styles applied to the component.
    */
   classes?: Partial<YearCalendarClasses>;
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
+  slots?: YearCalendarSlots;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
+  slotProps?: YearCalendarSlotProps;
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
@@ -44,7 +70,7 @@ export interface YearCalendarProps<TDate>
   defaultValue?: TDate | null;
   /**
    * The date used to generate the new value when both `value` and `defaultValue` are empty.
-   * @default The closest valid year using the validation props, except callbacks such as `shouldDisableDate`.
+   * @default The closest valid year using the validation props, except callbacks such as `shouldDisableYear`.
    */
   referenceDate?: TDate;
   /**
@@ -63,4 +89,5 @@ export interface YearCalendarProps<TDate>
   onYearFocus?: (year: number) => void;
   hasFocus?: boolean;
   onFocusedViewChange?: (hasFocus: boolean) => void;
+  gridLabelId?: string;
 }

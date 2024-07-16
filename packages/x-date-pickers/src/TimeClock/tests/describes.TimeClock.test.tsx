@@ -1,18 +1,18 @@
 import * as React from 'react';
 import { expect } from 'chai';
-import { describeConformance, fireTouchChangedEvent, screen } from '@mui/monorepo/test/utils';
-import { describeValue } from '@mui/x-date-pickers/tests/describeValue';
+import { screen } from '@mui/internal-test-utils';
 import {
   clockPointerClasses,
   TimeClock,
   timeClockClasses as classes,
 } from '@mui/x-date-pickers/TimeClock';
 import {
-  adapterToUse,
-  wrapPickerMount,
   createPickerRenderer,
-  getClockTouchEvent,
-} from 'test/utils/pickers-utils';
+  adapterToUse,
+  timeClockHandler,
+  describeValue,
+} from 'test/utils/pickers';
+import { describeConformance } from 'test/utils/describeConformance';
 
 describe('<TimeClock /> - Describes', () => {
   const { render, clock } = createPickerRenderer();
@@ -20,20 +20,16 @@ describe('<TimeClock /> - Describes', () => {
   describeConformance(<TimeClock />, () => ({
     classes,
     inheritComponent: 'div',
-    wrapMount: wrapPickerMount,
     render,
     refInstanceof: window.HTMLDivElement,
     muiName: 'MuiTimeClock',
-    skip: ['componentProp', 'componentsProp', 'reactTestRenderer', 'themeVariants'],
+    skip: ['componentProp', 'componentsProp', 'themeVariants'],
   }));
 
   describeValue(TimeClock, () => ({
     render,
     componentFamily: 'clock',
-    values: [
-      adapterToUse.date(new Date(2018, 0, 1, 12, 30)),
-      adapterToUse.date(new Date(2018, 0, 1, 13, 35)),
-    ],
+    values: [adapterToUse.date('2018-01-01T12:30:00'), adapterToUse.date('2018-01-01T13:35:00')],
     emptyValue: null,
     clock,
     assertRenderedValue: (expectedValue: any) => {
@@ -56,18 +52,9 @@ describe('<TimeClock /> - Describes', () => {
     },
     setNewValue: (value) => {
       const newValue = adapterToUse.addMinutes(adapterToUse.addHours(value, 1), 5);
-      const hasMeridiem = adapterToUse.is12HourCycleInCurrentLocale();
-      // change hours
-      const hourClockEvent = getClockTouchEvent(
-        adapterToUse.getHours(newValue),
-        hasMeridiem ? '12hours' : '24hours',
-      );
-      fireTouchChangedEvent(screen.getByMuiTest('clock'), 'touchmove', hourClockEvent);
-      fireTouchChangedEvent(screen.getByMuiTest('clock'), 'touchend', hourClockEvent);
-      // change minutes
-      const minutesClockEvent = getClockTouchEvent(adapterToUse.getMinutes(newValue), 'minutes');
-      fireTouchChangedEvent(screen.getByMuiTest('clock'), 'touchmove', minutesClockEvent);
-      fireTouchChangedEvent(screen.getByMuiTest('clock'), 'touchend', minutesClockEvent);
+
+      timeClockHandler.setViewValue(adapterToUse, newValue, 'hours');
+      timeClockHandler.setViewValue(adapterToUse, newValue, 'minutes');
 
       return newValue;
     },

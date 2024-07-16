@@ -8,24 +8,26 @@ import {
 } from '@mui/x-data-grid-premium';
 import { useDemoData } from '@mui/x-data-grid-generator';
 
+const visibleFields = [
+  'commodity',
+  'quantity',
+  'filledQuantity',
+  'status',
+  'isFilled',
+  'unitPrice',
+  'unitPriceCurrency',
+  'subTotal',
+  'feeRate',
+  'feeAmount',
+  'incoTerm',
+];
+
 export default function DataGridPremiumDemo() {
   const { data, loading } = useDemoData({
     dataSet: 'Commodity',
     rowLength: 100,
     editable: true,
-    visibleFields: [
-      'commodity',
-      'quantity',
-      'filledQuantity',
-      'status',
-      'isFilled',
-      'unitPrice',
-      'unitPriceCurrency',
-      'subTotal',
-      'feeRate',
-      'feeAmount',
-      'incoTerm',
-    ],
+    visibleFields,
   });
   const apiRef = useGridApiRef();
 
@@ -39,6 +41,11 @@ export default function DataGridPremiumDemo() {
       },
       sorting: {
         sortModel: [{ field: '__row_group_by_columns_group__', sort: 'asc' }],
+      },
+      aggregation: {
+        model: {
+          quantity: 'sum',
+        },
       },
     },
   });

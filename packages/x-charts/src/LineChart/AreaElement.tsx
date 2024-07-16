@@ -1,22 +1,18 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import composeClasses from '@mui/utils/composeClasses';
+import { useSlotProps } from '@mui/base/utils';
 import generateUtilityClass from '@mui/utils/generateUtilityClass';
-import { styled } from '@mui/material/styles';
 import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
-import { color as d3Color } from 'd3-color';
-import {
-  getIsFaded,
-  getIsHighlighted,
-  useInteractionItemProps,
-} from '../hooks/useInteractionItemProps';
-import { InteractionContext } from '../context/InteractionProvider';
-import { HighlightScope } from '../context/HighlightProvider';
+import { useInteractionItemProps } from '../hooks/useInteractionItemProps';
+import { AnimatedArea, AnimatedAreaProps } from './AnimatedArea';
+import { SeriesId } from '../models/seriesType/common';
+import { useItemHighlighted } from '../context';
 
 export interface AreaElementClasses {
   /** Styles applied to the root element. */
   root: string;
-  /** Styles applied to the root element when higlighted. */
+  /** Styles applied to the root element when highlighted. */
   highlighted: string;
   /** Styles applied to the root element when faded. */
   faded: string;
@@ -25,8 +21,9 @@ export interface AreaElementClasses {
 export type AreaElementClassKey = keyof AreaElementClasses;
 
 export interface AreaElementOwnerState {
-  id: string;
+  id: SeriesId;
   color: string;
+  gradientId?: string;
   isFaded: boolean;
   isHighlighted: boolean;
   classes?: Partial<AreaElementClasses>;
@@ -51,83 +48,113 @@ const useUtilityClasses = (ownerState: AreaElementOwnerState) => {
   return composeClasses(slots, getAreaElementUtilityClass, classes);
 };
 
-const AreaElementPath = styled('path', {
-  name: 'MuiAreaElement',
-  slot: 'Root',
-  overridesResolver: (_, styles) => styles.root,
-})<{ ownerState: AreaElementOwnerState }>(({ ownerState }) => ({
-  stroke: 'none',
-  fill: ownerState.isHighlighted
-    ? d3Color(ownerState.color)!.brighter(1).formatHex()
-    : d3Color(ownerState.color)!.brighter(0.5).formatHex(),
-  transition: 'opacity 0.2s ease-in, fill 0.2s ease-in',
-  opacity: ownerState.isFaded ? 0.3 : 1,
-}));
+export interface AreaElementSlots {
+  /**
+   * The component that renders the area.
+   * @default AnimatedArea
+   */
+  area?: React.JSXElementConstructor<AnimatedAreaProps>;
+}
 
-AreaElementPath.propTypes = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // | To update them edit the TypeScript types and run "yarn proptypes"  |
-  // ----------------------------------------------------------------------
-  as: PropTypes.elementType,
-  ownerState: PropTypes.shape({
-    classes: PropTypes.object,
-    color: PropTypes.string.isRequired,
-    id: PropTypes.string.isRequired,
-    isFaded: PropTypes.bool.isRequired,
-    isHighlighted: PropTypes.bool.isRequired,
-  }).isRequired,
-  sx: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
-    PropTypes.func,
-    PropTypes.object,
-  ]),
-} as any;
+export interface AreaElementSlotProps {
+  area?: AnimatedAreaProps;
+}
 
-export type AreaElementProps = Omit<AreaElementOwnerState, 'isFaded' | 'isHighlighted'> &
-  React.ComponentPropsWithoutRef<'path'> & {
-    highlightScope?: Partial<HighlightScope>;
-  };
+export interface AreaElementProps
+  extends Omit<AreaElementOwnerState, 'isFaded' | 'isHighlighted'>,
+    Pick<AnimatedAreaProps, 'skipAnimation'>,
+    Omit<React.SVGProps<SVGPathElement>, 'ref' | 'color' | 'id'> {
+  d: string;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
+  slotProps?: AreaElementSlotProps;
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
+  slots?: AreaElementSlots;
+}
 
+/**
+ * Demos:
+ *
+ * - [Lines](https://mui.com/x/react-charts/lines/)
+ * - [Areas demonstration](https://mui.com/x/react-charts/areas-demo/)
+ *
+ * API:
+ *
+ * - [AreaElement API](https://mui.com/x/api/charts/area-element/)
+ */
 function AreaElement(props: AreaElementProps) {
-  const { id, classes: innerClasses, color, highlightScope, ...other } = props;
+  const {
+    id,
+    classes: innerClasses,
+    color,
+    gradientId,
+    slots,
+    slotProps,
+    onClick,
+    ...other
+  } = props;
 
-  const getInteractionItemProps = useInteractionItemProps(highlightScope);
-
-  const { item } = React.useContext(InteractionContext);
-  const isHighlighted = getIsHighlighted(item, { type: 'line', seriesId: id }, highlightScope);
-  const isFaded =
-    !isHighlighted && getIsFaded(item, { type: 'line', seriesId: id }, highlightScope);
+  const getInteractionItemProps = useInteractionItemProps();
+  const { isFaded, isHighlighted } = useItemHighlighted({
+    seriesId: id,
+  });
 
   const ownerState = {
     id,
     classes: innerClasses,
     color,
+    gradientId,
     isFaded,
     isHighlighted,
   };
   const classes = useUtilityClasses(ownerState);
 
-  return (
-    <AreaElementPath
-      {...other}
-      ownerState={ownerState}
-      className={classes.root}
-      {...getInteractionItemProps({ type: 'line', seriesId: id })}
-    />
-  );
+  const Area = slots?.area ?? AnimatedArea;
+  const areaProps = useSlotProps({
+    elementType: Area,
+    externalSlotProps: slotProps?.area,
+    additionalProps: {
+      ...getInteractionItemProps({ type: 'line', seriesId: id }),
+      onClick,
+      cursor: onClick ? 'pointer' : 'unset',
+    },
+    className: classes.root,
+    ownerState,
+  });
+
+  return <Area {...other} {...areaProps} />;
 }
 
 AreaElement.propTypes = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
-  // | To update them edit the TypeScript types and run "yarn proptypes"  |
+  // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
   classes: PropTypes.object,
-  highlightScope: PropTypes.shape({
-    faded: PropTypes.oneOf(['global', 'none', 'series']),
-    highlighted: PropTypes.oneOf(['item', 'none', 'series']),
-  }),
+  color: PropTypes.string.isRequired,
+  d: PropTypes.string.isRequired,
+  gradientId: PropTypes.string,
+  id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+  /**
+   * If `true`, animations are skipped.
+   * @default false
+   */
+  skipAnimation: PropTypes.bool,
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
+  slotProps: PropTypes.object,
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
+  slots: PropTypes.object,
 } as any;
 
 export { AreaElement };

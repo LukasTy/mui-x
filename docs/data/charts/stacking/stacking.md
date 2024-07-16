@@ -1,6 +1,6 @@
 ---
-product: charts
 title: Charts - Stacking
+productId: x-charts
 ---
 
 # Charts - Stacking
@@ -19,7 +19,7 @@ Series with the same `stack` value will get stacked together.
 
 Based on D3 [stack orders](https://github.com/d3/d3-shape#stack-orders) and [stack offsets](https://github.com/d3/d3-shape#stack-offsets) you can modify how series are stacked.
 
-To pass those attributes, use series properties `stackOffset` (default `'diverging'`) and `stackOrder` (default `'none'`).
+To pass those attributes, use series properties `stackOffset` (default `'diverging'` for bar and `'none'` for line) and `stackOrder` (default `'none'`).
 You can define them for only one of the series of a stack group.
 
 ### Stack offset
@@ -31,7 +31,7 @@ Otherwise, the stacked rectangle will overlap.
 
 To show series evolution relative to other stacked series (instead of their absolute values), you can use `'expand'`.
 
-| value         | description                                               |
+| Value         | Description                                               |
 | :------------ | :-------------------------------------------------------- |
 | `'none'`      | Set baseline at 0 and stack data on top of each other.    |
 | `'expand'`    | Set baseline at zero and scale data to end up at 1.       |
@@ -61,7 +61,7 @@ With `'appearance'`, the position of the maximal series value is taken into cons
 With `'ascending'` and `'descending'`, the sum of values is taken into consideration.
 Which corresponds to the area taken by the series on the chart.
 
-| value          | description                                                                                                                               |
+| Value          | Description                                                                                                                               |
 | :------------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
 | `'none'`       | Respect the order the series are provided in.                                                                                             |
 | `'reverse'`    | Reverse the order the series are provided in.                                                                                             |
