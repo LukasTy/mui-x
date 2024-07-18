@@ -29,7 +29,9 @@ const DataGridProRaw = React.forwardRef(function DataGridPro<R extends GridValid
   const privateApiRef = useDataGridProComponent(props.apiRef, props);
   useLicenseVerifier('x-data-grid-pro', releaseInfo);
 
-  validateProps(props, propValidatorsDataGridPro);
+  if (process.env.NODE_ENV !== 'production') {
+    validateProps(props, propValidatorsDataGridPro);
+  }
   return (
     <GridContextProvider privateApiRef={privateApiRef} props={props}>
       <GridRoot
@@ -68,7 +70,7 @@ export const DataGridPro = React.memo(DataGridProRaw) as DataGridProComponent;
 DataGridProRaw.propTypes = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
-  // | To update them edit the TypeScript types and run "yarn proptypes"  |
+  // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
   /**
    * The ref object that allows grid manipulation. Can be instantiated with `useGridApiRef()`.
@@ -85,7 +87,7 @@ DataGridProRaw.propTypes = {
    */
   'aria-labelledby': PropTypes.string,
   /**
-   * If `true`, the Data Grid height is dynamic and follow the number of rows in the Data Grid.
+   * If `true`, the Data Grid height is dynamic and follows the number of rows in the Data Grid.
    * @default false
    */
   autoHeight: PropTypes.bool,
@@ -262,6 +264,12 @@ DataGridProRaw.propTypes = {
    */
   editMode: PropTypes.oneOf(['cell', 'row']),
   /**
+   * Use if the actual rowCount is not known upfront, but an estimation is available.
+   * If some rows have children (for instance in the tree data), this number represents the amount of top level rows.
+   * Applicable only with `paginationMode="server"` and when `rowCount="-1"`
+   */
+  estimatedRowCount: PropTypes.number,
+  /**
    * Unstable features, breaking changes might be introduced.
    * For each feature, if the flag is not explicitly set to `true`, the feature will be fully disabled and any property / method call will not have any effect.
    */
@@ -364,6 +372,10 @@ DataGridProRaw.propTypes = {
    */
   groupingColDef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
   /**
+   * Override the height of the header filters.
+   */
+  headerFilterHeight: PropTypes.number,
+  /**
    * If `true`, enables the data grid filtering on header feature.
    * @default false
    */
@@ -446,7 +458,8 @@ DataGridProRaw.propTypes = {
    */
   keepNonExistentRowsSelected: PropTypes.bool,
   /**
-   * If `true`, a  loading overlay is displayed.
+   * If `true`, a loading overlay is displayed.
+   * @default false
    */
   loading: PropTypes.bool,
   /**
@@ -625,6 +638,11 @@ DataGridProRaw.propTypes = {
    */
   onMenuOpen: PropTypes.func,
   /**
+   * Callback fired when the pagination meta has changed.
+   * @param {GridPaginationMeta} paginationMeta Updated pagination meta.
+   */
+  onPaginationMetaChange: PropTypes.func,
+  /**
    * Callback fired when the pagination model has changed.
    * @param {GridPaginationModel} model Updated pagination model.
    * @param {GridCallbackDetails} details Additional details for this callback.
@@ -753,6 +771,13 @@ DataGridProRaw.propTypes = {
    */
   pagination: PropTypes.bool,
   /**
+   * The extra information about the pagination state of the Data Grid.
+   * Only applicable with `paginationMode="server"`.
+   */
+  paginationMeta: PropTypes.shape({
+    hasNextPage: PropTypes.bool,
+  }),
+  /**
    * Pagination can be processed on the server or client-side.
    * Set it to 'client' if you would like to handle the pagination on the client-side.
    * Set it to 'server' if you would like to handle the pagination on the server-side.
@@ -798,6 +823,7 @@ DataGridProRaw.propTypes = {
   /**
    * Set the total number of rows, if it is different from the length of the value `rows` prop.
    * If some rows have children (for instance in the tree data), this number represents the amount of top level rows.
+   * Only works with `paginationMode="server"`, ignored when `paginationMode="client"`.
    */
   rowCount: PropTypes.number,
   /**
@@ -918,4 +944,16 @@ DataGridProRaw.propTypes = {
    * @default false
    */
   treeData: PropTypes.bool,
+  unstable_dataSource: PropTypes.shape({
+    getChildrenCount: PropTypes.func,
+    getGroupKey: PropTypes.func,
+    getRows: PropTypes.func.isRequired,
+    updateRow: PropTypes.func,
+  }),
+  unstable_dataSourceCache: PropTypes.shape({
+    clear: PropTypes.func.isRequired,
+    get: PropTypes.func.isRequired,
+    set: PropTypes.func.isRequired,
+  }),
+  unstable_onDataSourceError: PropTypes.func,
 } as any;

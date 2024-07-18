@@ -1,22 +1,23 @@
 /* eslint-disable no-restricted-syntax */
 import { Octokit } from '@octokit/rest';
 import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 const GIT_ORGANIZATION = 'mui';
 const GIT_REPO = 'mui-x';
 
 /**
  * @param {string} commitMessage
- * @returns {string} The tags in lowercases, ordered ascending and commaseparated
+ * @returns {string} The tags in lowercases, ordered ascending and comma-separated
  */
 function parseTags(commitMessage) {
-  const tagMatch = commitMessage.match(/^(\[[\w-]+\])+/);
+  const tagMatch = commitMessage.match(/^(\[[\w- ]+\])+/);
   if (tagMatch === null) {
     return '';
   }
   const [tagsWithBracketDelimiter] = tagMatch;
   return tagsWithBracketDelimiter
-    .match(/([\w-]+)/g)
+    .match(/([\w- ]+)/g)
     .map((tag) => {
       return tag;
     })
@@ -42,21 +43,21 @@ async function findLatestTaggedVersion(octokit) {
   return data[0].name.trim();
 }
 
-function resolvePackageByLabels(labels) {
-  let resolvedPackage = null;
+function resolvePackagesByLabels(labels) {
+  const resolvedPackages = [];
   labels.forEach((label) => {
     switch (label.name) {
       case 'component: data grid':
-        resolvedPackage = 'DataGrid';
+        resolvedPackages.push('DataGrid');
         break;
       case 'component: pickers':
-        resolvedPackage = 'pickers';
+        resolvedPackages.push('pickers');
         break;
       default:
         break;
     }
   });
-  return resolvedPackage;
+  return resolvedPackages;
 }
 
 async function main(argv) {
@@ -164,8 +165,11 @@ async function main(argv) {
 
   commitsItems.forEach((commitItem) => {
     const tag = parseTags(commitItem.commit.message);
-    switch (tag) {
+    // for now we use only one parsed tag
+    const firstTag = tag.split(',')[0];
+    switch (firstTag) {
       case 'DataGrid':
+      case 'data grid':
         dataGridCommits.push(commitItem);
         break;
       case 'DataGridPro':
@@ -189,6 +193,7 @@ async function main(argv) {
         chartsCommits.push(commitItem);
         break;
       case 'TreeView':
+      case 'tree view':
         treeViewCommits.push(commitItem);
         break;
       case 'docs':
@@ -203,19 +208,21 @@ async function main(argv) {
       case 'l10n':
       case '118n': {
         const prLabels = prsLabelsMap[commitItem.sha];
-        const resolvedPackage = resolvePackageByLabels(prLabels);
-        if (resolvedPackage) {
-          switch (resolvedPackage) {
-            case 'DataGrid':
-              dataGridCommits.push(commitItem);
-              break;
-            case 'pickers':
-              pickersCommits.push(commitItem);
-              break;
-            default:
-              coreCommits.push(commitItem);
-              break;
-          }
+        const resolvedPackages = resolvePackagesByLabels(prLabels);
+        if (resolvedPackages.length > 0) {
+          resolvedPackages.forEach((resolvedPackage) => {
+            switch (resolvedPackage) {
+              case 'DataGrid':
+                dataGridCommits.push(commitItem);
+                break;
+              case 'pickers':
+                pickersCommits.push(commitItem);
+                break;
+              default:
+                coreCommits.push(commitItem);
+                break;
+            }
+          });
         }
         break;
       }
@@ -264,6 +271,8 @@ We'd like to offer a big thanks to the ${
 
 TODO INSERT HIGHLIGHTS
 ${changeLogMessages.length > 0 ? '\n\n' : ''}${changeLogMessages.join('\n')}
+
+<!--/ HIGHLIGHT_ABOVE_SEPARATOR /-->
 
 ### Data Grid
 
@@ -319,7 +328,7 @@ ${logChangelogSection(otherCommits, '')}
   console.log(changelog);
 }
 
-yargs(process.argv.slice(2))
+yargs(hideBin(process.argv))
   .command({
     command: '$0',
     description: 'Creates a changelog',

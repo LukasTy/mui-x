@@ -51,6 +51,8 @@ const GridPaperRoot = styled(Paper, {
   minWidth: 300,
   maxHeight: 450,
   display: 'flex',
+  maxWidth: `calc(100vw - ${theme.spacing(0.5)})`,
+  overflow: 'auto',
 }));
 
 const GridPanel = React.forwardRef<HTMLDivElement, GridPanelProps>((props, ref) => {
@@ -77,7 +79,10 @@ const GridPanel = React.forwardRef<HTMLDivElement, GridPanelProps>((props, ref) 
     () => [
       {
         name: 'flip',
-        enabled: false,
+        enabled: true,
+        options: {
+          rootBoundary: 'document',
+        },
       },
       {
         name: 'isPlaced',
@@ -137,7 +142,7 @@ const GridPanel = React.forwardRef<HTMLDivElement, GridPanelProps>((props, ref) 
 GridPanel.propTypes = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
-  // | To update them edit the TypeScript types and run "yarn proptypes"  |
+  // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
   /**
    * Popper render function or node.

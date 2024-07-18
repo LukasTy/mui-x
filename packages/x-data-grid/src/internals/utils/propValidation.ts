@@ -16,33 +16,50 @@ export const propValidatorsDataGrid: PropValidator<DataGridProcessedProps>[] = [
       ].join('\n')) ||
     undefined,
   (props) =>
+    (props.paginationMode === 'client' &&
+      props.paginationMeta != null &&
+      [
+        'MUI X: Usage of the `paginationMeta` prop with client-side pagination (`paginationMode="client"`) has no effect.',
+        '`paginationMeta` is only meant to be used with `paginationMode="server"`.',
+      ].join('\n')) ||
+    undefined,
+  (props) =>
     (props.signature === GridSignature.DataGrid &&
       props.paginationMode === 'client' &&
       isNumber(props.rowCount) &&
-      'MUI X: Usage of the `rowCount` prop with client side pagination (`paginationMode="client"`) has no effect. `rowCount` is only meant to be used with `paginationMode="server"`.') ||
+      [
+        'MUI X: Usage of the `rowCount` prop with client side pagination (`paginationMode="client"`) has no effect.',
+        '`rowCount` is only meant to be used with `paginationMode="server"`.',
+      ].join('\n')) ||
+    undefined,
+  (props) =>
+    (props.paginationMode === 'server' &&
+      props.rowCount == null &&
+      !props.unstable_dataSource &&
+      [
+        "MUI X: The `rowCount` prop must be passed using `paginationMode='server'`",
+        'For more detail, see http://mui.com/components/data-grid/pagination/#index-based-pagination',
+      ].join('\n')) ||
     undefined,
 ];
 
 const warnedOnceCache = new Set();
-const warnOnce = (message: string) => {
+function warnOnce(message: string) {
   if (!warnedOnceCache.has(message)) {
     console.error(message);
     warnedOnceCache.add(message);
   }
-};
+}
 
-export const validateProps = <TProps>(props: TProps, validators: PropValidator<TProps>[]) => {
-  if (process.env.NODE_ENV === 'production') {
-    return;
-  }
+export function validateProps<TProps>(props: TProps, validators: PropValidator<TProps>[]) {
   validators.forEach((validator) => {
     const warning = validator(props);
     if (warning) {
       warnOnce(warning);
     }
   });
-};
+}
 
-export const clearWarningsCache = () => {
+export function clearWarningsCache() {
   warnedOnceCache.clear();
-};
+}

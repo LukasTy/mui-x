@@ -30,8 +30,9 @@ import { GridSlotsComponentsProps } from '../gridSlotsComponentsProps';
 import { GridColumnVisibilityModel } from '../../hooks/features/columns/gridColumnsInterfaces';
 import { GridCellModesModel, GridRowModesModel } from '../api/gridEditingApi';
 import { GridColumnGroupingModel } from '../gridColumnGrouping';
-import { GridPaginationModel } from '../gridPaginationProps';
+import { GridPaginationMeta, GridPaginationModel } from '../gridPaginationProps';
 import type { GridAutosizeOptions } from '../../hooks/features/columnResize';
+import type { GridDataSource } from '../gridDataSource';
 
 export interface GridExperimentalFeatures {
   /**
@@ -52,14 +53,6 @@ export type DataGridProps<R extends GridValidRowModel = any> = Omit<
 > & {
   pagination?: true;
 };
-
-/**
- * The props of the `DataGrid` component after the pre-processing phase.
- */
-export interface DataGridProcessedProps<R extends GridValidRowModel = any>
-  extends DataGridPropsWithDefaultValues,
-    DataGridPropsWithComplexDefaultValueAfterProcessing,
-    DataGridPropsWithoutDefaultValue<R> {}
 
 /**
  * The props of the `DataGrid` component after the pre-processing phase that the user should not be able to override.
@@ -107,7 +100,7 @@ export interface DataGridPropsWithComplexDefaultValueBeforeProcessing {
  */
 export interface DataGridPropsWithDefaultValues<R extends GridValidRowModel = any> {
   /**
-   * If `true`, the Data Grid height is dynamic and follow the number of rows in the Data Grid.
+   * If `true`, the Data Grid height is dynamic and follows the number of rows in the Data Grid.
    * @default false
    */
   autoHeight: boolean;
@@ -269,6 +262,11 @@ export interface DataGridPropsWithDefaultValues<R extends GridValidRowModel = an
    */
   logLevel: keyof Logger | false;
   /**
+   * If `true`, a loading overlay is displayed.
+   * @default false
+   */
+  loading: boolean;
+  /**
    * If `true`, pagination is enabled.
    * @default false
    */
@@ -411,8 +409,15 @@ export interface DataGridPropsWithoutDefaultValue<R extends GridValidRowModel = 
   /**
    * Set the total number of rows, if it is different from the length of the value `rows` prop.
    * If some rows have children (for instance in the tree data), this number represents the amount of top level rows.
+   * Only works with `paginationMode="server"`, ignored when `paginationMode="client"`.
    */
   rowCount?: number;
+  /**
+   * Use if the actual rowCount is not known upfront, but an estimation is available.
+   * If some rows have children (for instance in the tree data), this number represents the amount of top level rows.
+   * Applicable only with `paginationMode="server"` and when `rowCount="-1"`
+   */
+  estimatedRowCount?: number;
   /**
    * Override the height/width of the Data Grid inner scrollbar.
    */
@@ -601,6 +606,11 @@ export interface DataGridPropsWithoutDefaultValue<R extends GridValidRowModel = 
    */
   paginationModel?: GridPaginationModel;
   /**
+   * The extra information about the pagination state of the Data Grid.
+   * Only applicable with `paginationMode="server"`.
+   */
+  paginationMeta?: GridPaginationMeta;
+  /**
    * Callback fired when the pagination model has changed.
    * @param {GridPaginationModel} model Updated pagination model.
    * @param {GridCallbackDetails} details Additional details for this callback.
@@ -611,6 +621,11 @@ export interface DataGridPropsWithoutDefaultValue<R extends GridValidRowModel = 
    * @param {number} count Updated row count.
    */
   onRowCountChange?: (count: number) => void;
+  /**
+   * Callback fired when the pagination meta has changed.
+   * @param {GridPaginationMeta} paginationMeta Updated pagination meta.
+   */
+  onPaginationMetaChange?: (paginationMeta: GridPaginationMeta) => void;
   /**
    * Callback fired when the preferences panel is closed.
    * @param {GridPreferencePanelParams} params With all properties from [[GridPreferencePanelParams]].
@@ -726,10 +741,6 @@ export interface DataGridPropsWithoutDefaultValue<R extends GridValidRowModel = 
    */
   getRowId?: GridRowIdGetter<R>;
   /**
-   * If `true`, a  loading overlay is displayed.
-   */
-  loading?: boolean;
-  /**
    * Nonce of the inline styles for [Content Security Policy](https://www.w3.org/TR/2016/REC-CSP2-20161215/#script-src-the-nonce-attribute).
    */
   nonce?: string;
@@ -799,6 +810,14 @@ export interface DataGridProSharedPropsWithDefaultValue {
   headerFilters: boolean;
 }
 
+export interface DataGridProSharedPropsWithoutDefaultValue {
+  /**
+   * Override the height of the header filters.
+   */
+  headerFilterHeight?: number;
+  unstable_dataSource?: GridDataSource;
+}
+
 export interface DataGridPremiumSharedPropsWithDefaultValue {
   /**
    * If `true`, the cell selection mode is enabled.
@@ -808,9 +827,12 @@ export interface DataGridPremiumSharedPropsWithDefaultValue {
 }
 
 /**
- * Contains the commercial packages' props shared in the MIT version.
+ * The props of the `DataGrid` component after the pre-processing phase.
  */
-export interface DataGridProcessedPropsWithShared
-  extends DataGridProcessedProps,
+export interface DataGridProcessedProps<R extends GridValidRowModel = any>
+  extends DataGridPropsWithDefaultValues,
+    DataGridPropsWithComplexDefaultValueAfterProcessing,
+    DataGridPropsWithoutDefaultValue<R>,
+    DataGridProSharedPropsWithoutDefaultValue,
     Partial<DataGridProSharedPropsWithDefaultValue>,
     Partial<DataGridPremiumSharedPropsWithDefaultValue> {}

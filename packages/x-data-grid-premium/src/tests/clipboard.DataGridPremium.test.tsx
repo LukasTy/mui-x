@@ -7,7 +7,7 @@ import {
   GridColDef,
 } from '@mui/x-data-grid-premium';
 // @ts-ignore Remove once the test utils are typed
-import { createRenderer, fireEvent, userEvent, waitFor } from '@mui-internal/test-utils';
+import { createRenderer, fireEvent, userEvent, waitFor } from '@mui/internal-test-utils';
 import { expect } from 'chai';
 import { stub, SinonStub, spy } from 'sinon';
 import { getCell, getColumnValues, sleep } from 'test/utils/helperFn';
@@ -119,12 +119,14 @@ describe('<DataGridPremium /> - Clipboard', () => {
         { id: 2, brand: 'Puma' },
       ];
       render(
-        <DataGridPremium
-          columns={columns}
-          rows={rows}
-          cellSelection
-          sortModel={[{ field: 'brand', sort: 'asc' }]}
-        />,
+        <div style={{ width: 300, height: 300 }}>
+          <DataGridPremium
+            columns={columns}
+            rows={rows}
+            cellSelection
+            sortModel={[{ field: 'brand', sort: 'asc' }]}
+          />
+        </div>,
       );
 
       const cell = getCell(0, 0);
@@ -139,6 +141,32 @@ describe('<DataGridPremium /> - Clipboard', () => {
 
       fireEvent.keyDown(cell, { key: 'c', keyCode: 67, ctrlKey: true });
       expect(writeText.lastCall.firstArg).to.equal(['Adidas', 'Nike', 'Puma'].join('\r\n'));
+    });
+
+    it('should not escape double quotes when copying multiple cells to clipboard', () => {
+      render(
+        <div style={{ width: 300, height: 300 }}>
+          <DataGridPremium
+            columns={[{ field: 'value' }]}
+            rows={[
+              { id: 0, value: '1 " 1' },
+              { id: 1, value: '2' },
+            ]}
+            cellSelection
+            disableRowSelectionOnClick
+          />
+        </div>,
+      );
+
+      const cell = getCell(0, 0);
+      cell.focus();
+      userEvent.mousePress(cell);
+
+      fireEvent.keyDown(cell, { key: 'Ctrl' });
+      fireEvent.click(getCell(1, 0), { ctrlKey: true });
+
+      fireEvent.keyDown(cell, { key: 'c', keyCode: 67, ctrlKey: true });
+      expect(writeText.lastCall.firstArg).to.equal(['1 " 1', '2'].join('\r\n'));
     });
   });
 

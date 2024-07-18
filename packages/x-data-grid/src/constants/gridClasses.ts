@@ -118,6 +118,10 @@ export interface GridClasses {
    */
   checkboxInput: string;
   /**
+   * Styles applied to the column header element.
+   */
+  columnHeader: string;
+  /**
    * Styles applied to the column header if `headerAlign="center"`.
    */
   'columnHeader--alignCenter': string;
@@ -156,9 +160,9 @@ export interface GridClasses {
   'columnHeader--pinnedLeft': string;
   'columnHeader--pinnedRight': string;
   /**
-   * Styles applied to the column header element.
+   * Styles applied to the last column header element.
    */
-  columnHeader: string;
+  'columnHeader--last': string;
   /**
    * Styles applied to the header checkbox cell element.
    */
@@ -293,6 +297,11 @@ export interface GridClasses {
    */
   filler: string;
   /**
+   * Styles applied to the filler row with top border.
+   * @ignore - do not document.
+   */
+  'filler--borderTop': string;
+  /**
    * Styles applied to the filler row pinned left section.
    * @ignore - do not document.
    */
@@ -358,6 +367,11 @@ export interface GridClasses {
    * Styles applied to the main container element when it has right pinned columns.
    */
   'main--hasPinnedRight': string;
+  /**
+   * Styles applied to the main container element when it has an active skeleton loading overlay.
+   * @ignore - do not document.
+   */
+  'main--hasSkeletonLoadingOverlay': string;
   /**
    * Styles applied to the menu element.
    */
@@ -480,6 +494,10 @@ export interface GridClasses {
    */
   'rowReorderCell--draggable': string;
   /**
+   * Styles applied to the skeleton row element.
+   */
+  rowSkeleton: string;
+  /**
    * Styles applied to both scroll area elements.
    */
   scrollArea: string;
@@ -570,6 +588,11 @@ export interface GridClasses {
    */
   treeDataGroupingCellToggle: string;
   /**
+   * Styles applied to the loading container of the grouping cell of the tree data.
+   * @ignore - do not document.
+   */
+  treeDataGroupingCellLoadingContainer: string;
+  /**
    * Styles applied to the root element of the grouping criteria cell
    */
   groupingCriteriaCell: string;
@@ -630,6 +653,7 @@ export const gridClasses = generateUtilityClasses<GridClassKey>('MuiDataGrid', [
   'cellSkeleton',
   'cellOffsetLeft',
   'checkboxInput',
+  'columnHeader',
   'columnHeader--alignCenter',
   'columnHeader--alignLeft',
   'columnHeader--alignRight',
@@ -641,7 +665,7 @@ export const gridClasses = generateUtilityClasses<GridClassKey>('MuiDataGrid', [
   'columnHeader--filtered',
   'columnHeader--pinnedLeft',
   'columnHeader--pinnedRight',
-  'columnHeader',
+  'columnHeader--last',
   'columnHeaderCheckbox',
   'columnHeaderDraggableContainer',
   'columnHeaderTitle',
@@ -675,6 +699,7 @@ export const gridClasses = generateUtilityClasses<GridClassKey>('MuiDataGrid', [
   'editBooleanCell',
   'editInputCell',
   'filler',
+  'filler--borderTop',
   'filler--pinnedLeft',
   'filler--pinnedRight',
   'filterForm',
@@ -690,6 +715,7 @@ export const gridClasses = generateUtilityClasses<GridClassKey>('MuiDataGrid', [
   'iconSeparator',
   'main',
   'main--hasPinnedRight',
+  'main--hasSkeletonLoadingOverlay',
   'menu',
   'menuIcon',
   'menuIconButton',
@@ -716,6 +742,7 @@ export const gridClasses = generateUtilityClasses<GridClassKey>('MuiDataGrid', [
   'rowReorderCellContainer',
   'rowReorderCell',
   'rowReorderCell--draggable',
+  'rowSkeleton',
   'scrollArea--left',
   'scrollArea--right',
   'scrollArea',
@@ -743,6 +770,7 @@ export const gridClasses = generateUtilityClasses<GridClassKey>('MuiDataGrid', [
   'columnHeader--withLeftBorder',
   'treeDataGroupingCell',
   'treeDataGroupingCellToggle',
+  'treeDataGroupingCellLoadingContainer',
   'groupingCriteriaCell',
   'groupingCriteriaCellToggle',
   'pinnedRows',

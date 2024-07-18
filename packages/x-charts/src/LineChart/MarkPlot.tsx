@@ -1,13 +1,15 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { SeriesContext } from '../context/SeriesContextProvider';
-import { CartesianContext } from '../context/CartesianContextProvider';
+import { useCartesianContext } from '../context/CartesianProvider';
 import { MarkElement, MarkElementProps } from './MarkElement';
 import { getValueToPositionMapper } from '../hooks/useScale';
+import { useChartId } from '../hooks/useChartId';
 import { DEFAULT_X_AXIS_KEY } from '../constants';
 import { LineItemIdentifier } from '../models/seriesType/line';
-import { DrawingContext } from '../context/DrawingProvider';
-import { cleanId } from '../internals/utils';
+import { cleanId } from '../internals/cleanId';
+import getColor from './getColor';
+import { useLineSeries } from '../hooks/useSeries';
+import { useDrawingArea } from '../hooks/useDrawingArea';
 
 export interface MarkPlotSlots {
   mark?: React.JSXElementConstructor<MarkElementProps>;
@@ -54,9 +56,10 @@ export interface MarkPlotProps
 function MarkPlot(props: MarkPlotProps) {
   const { slots, slotProps, skipAnimation, onItemClick, ...other } = props;
 
-  const seriesData = React.useContext(SeriesContext).line;
-  const axisData = React.useContext(CartesianContext);
-  const { chartId } = React.useContext(DrawingContext);
+  const seriesData = useLineSeries();
+  const axisData = useCartesianContext();
+  const chartId = useChartId();
+  const { left, width, top, height } = useDrawingArea();
 
   const Mark = slots?.mark ?? MarkElement;
 
@@ -88,14 +91,11 @@ function MarkPlot(props: MarkPlotProps) {
           const yScale = yAxis[yAxisKey].scale;
           const xData = xAxis[xAxisKey].data;
 
-          const xRange = xAxis[xAxisKey].scale.range();
-          const yRange = yScale.range();
-
           const isInRange = ({ x, y }: { x: number; y: number }) => {
-            if (x < Math.min(...xRange) || x > Math.max(...xRange)) {
+            if (x < left || x > left + width) {
               return false;
             }
-            if (y < Math.min(...yRange) || y > Math.max(...yRange)) {
+            if (y < top || y > top + height) {
               return false;
             }
             return true;
@@ -112,6 +112,8 @@ function MarkPlot(props: MarkPlotProps) {
           }
 
           const clipId = cleanId(`${chartId}-${seriesId}-line-clip`); // We assume that if displaying line mark, the line will also be rendered
+
+          const colorGetter = getColor(series[seriesId], xAxis[xAxisKey], yAxis[yAxisKey]);
 
           return (
             <g key={seriesId} clipPath={`url(#${clipId})`}>
@@ -153,10 +155,9 @@ function MarkPlot(props: MarkPlotProps) {
                       id={seriesId}
                       dataIndex={index}
                       shape="circle"
-                      color={series[seriesId].color}
+                      color={colorGetter(index)}
                       x={x}
                       y={y!} // Don't know why TS doesn't get from the filter that y can't be null
-                      highlightScope={series[seriesId].highlightScope}
                       skipAnimation={skipAnimation}
                       onClick={
                         onItemClick &&
@@ -178,7 +179,7 @@ function MarkPlot(props: MarkPlotProps) {
 MarkPlot.propTypes = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
-  // | To update them edit the TypeScript types and run "yarn proptypes"  |
+  // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
   /**
    * Callback fired when a line mark item is clicked.

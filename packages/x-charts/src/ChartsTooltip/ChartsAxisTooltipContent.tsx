@@ -1,15 +1,20 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import { SxProps, Theme } from '@mui/material/styles';
 import { useSlotProps } from '@mui/base/utils';
 import { AxisInteractionData } from '../context/InteractionProvider';
-import { SeriesContext } from '../context/SeriesContextProvider';
-import { CartesianContext } from '../context/CartesianContextProvider';
+import { useCartesianContext } from '../context/CartesianProvider';
 import { ChartSeriesDefaultized, ChartSeriesType } from '../models/seriesType/config';
 import { AxisDefaultized } from '../models/axis';
 import { ChartsTooltipClasses } from './chartsTooltipClasses';
 import { DefaultChartsAxisTooltipContent } from './DefaultChartsAxisTooltipContent';
-import { isCartesianSeriesType } from './utils';
+import { ZAxisContext } from '../context/ZAxisContextProvider';
+import { useColorProcessor } from '../hooks/useColor';
+import { isCartesianSeriesType } from '../internals/isCartesian';
+import { useSeries } from '../hooks/useSeries';
+
+type ChartSeriesDefaultizedWithColorGetter = ChartSeriesDefaultized<ChartSeriesType> & {
+  getColor: (dataIndex: number) => string;
+};
 
 export type ChartsAxisContentProps = {
   /**
@@ -19,7 +24,7 @@ export type ChartsAxisContentProps = {
   /**
    * The series linked to the triggered axis.
    */
-  series: ChartSeriesDefaultized<ChartSeriesType>[];
+  series: ChartSeriesDefaultizedWithColorGetter[];
   /**
    * The properties of the triggered axis.
    */
@@ -31,7 +36,7 @@ export type ChartsAxisContentProps = {
   /**
    * The value associated to the current mouse position.
    */
-  axisValue: any;
+  axisValue: string | number | Date | null;
   /**
    * Override or extend the styles applied to the component.
    */
@@ -39,6 +44,9 @@ export type ChartsAxisContentProps = {
   sx?: SxProps<Theme>;
 };
 
+/**
+ * @ignore - internal component.
+ */
 function ChartsAxisTooltipContent(props: {
   axisData: AxisInteractionData;
   content?: React.ElementType<ChartsAxisContentProps>;
@@ -53,8 +61,11 @@ function ChartsAxisTooltipContent(props: {
   const dataIndex = isXaxis ? axisData.x && axisData.x.index : axisData.y && axisData.y.index;
   const axisValue = isXaxis ? axisData.x && axisData.x.value : axisData.y && axisData.y.value;
 
-  const { xAxisIds, xAxis, yAxisIds, yAxis } = React.useContext(CartesianContext);
-  const series = React.useContext(SeriesContext);
+  const { xAxisIds, xAxis, yAxisIds, yAxis } = useCartesianContext();
+  const { zAxisIds, zAxis } = React.useContext(ZAxisContext);
+  const series = useSeries();
+
+  const colorProcessors = useColorProcessor();
 
   const USED_AXIS_ID = isXaxis ? xAxisIds[0] : yAxisIds[0];
 
@@ -67,12 +78,35 @@ function ChartsAxisTooltipContent(props: {
           const item = series[seriesType]!.series[seriesId];
           const axisKey = isXaxis ? item.xAxisKey : item.yAxisKey;
           if (axisKey === undefined || axisKey === USED_AXIS_ID) {
-            rep.push(series[seriesType]!.series[seriesId]);
+            const seriesToAdd = series[seriesType]!.series[seriesId];
+
+            const zAxisKey = (seriesToAdd as any).zAxisKey ?? zAxisIds[0];
+
+            const getColor =
+              colorProcessors[seriesType]?.(
+                seriesToAdd as any,
+                xAxis[seriesToAdd.xAxisKey ?? xAxisIds[0]],
+                yAxis[seriesToAdd.yAxisKey ?? yAxisIds[0]],
+                zAxisKey && zAxis[zAxisKey],
+              ) ?? (() => '');
+
+            rep.push({ ...seriesToAdd, getColor });
           }
         });
       });
     return rep;
-  }, [USED_AXIS_ID, isXaxis, series]);
+  }, [
+    USED_AXIS_ID,
+    colorProcessors,
+    isXaxis,
+    series,
+    xAxis,
+    xAxisIds,
+    yAxis,
+    yAxisIds,
+    zAxis,
+    zAxisIds,
+  ]);
 
   const relevantAxis = React.useMemo(() => {
     return isXaxis ? xAxis[USED_AXIS_ID] : yAxis[USED_AXIS_ID];
@@ -95,55 +129,5 @@ function ChartsAxisTooltipContent(props: {
   });
   return <Content {...chartTooltipContentProps} />;
 }
-
-ChartsAxisTooltipContent.propTypes = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // | To update them edit the TypeScript types and run "yarn proptypes"  |
-  // ----------------------------------------------------------------------
-  axisData: PropTypes.shape({
-    x: PropTypes.shape({
-      index: PropTypes.number,
-      value: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.number, PropTypes.string])
-        .isRequired,
-    }),
-    y: PropTypes.shape({
-      index: PropTypes.number,
-      value: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.number, PropTypes.string])
-        .isRequired,
-    }),
-  }).isRequired,
-  classes: PropTypes.object.isRequired,
-  content: PropTypes.elementType,
-  contentProps: PropTypes.shape({
-    axis: PropTypes.object,
-    axisData: PropTypes.shape({
-      x: PropTypes.shape({
-        index: PropTypes.number,
-        value: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.number, PropTypes.string])
-          .isRequired,
-      }),
-      y: PropTypes.shape({
-        index: PropTypes.number,
-        value: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.number, PropTypes.string])
-          .isRequired,
-      }),
-    }),
-    axisValue: PropTypes.any,
-    classes: PropTypes.object,
-    dataIndex: PropTypes.number,
-    series: PropTypes.arrayOf(PropTypes.object),
-    sx: PropTypes.oneOfType([
-      PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
-      PropTypes.func,
-      PropTypes.object,
-    ]),
-  }),
-  sx: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
-    PropTypes.func,
-    PropTypes.object,
-  ]),
-} as any;
 
 export { ChartsAxisTooltipContent };

@@ -2,6 +2,7 @@ import { pie as d3Pie } from 'd3-shape';
 import { ChartSeriesDefaultized, Formatter } from '../models/seriesType/config';
 import { ChartsPieSorting, PieValueType } from '../models/seriesType/pie';
 import { SeriesId } from '../models/seriesType/common';
+import { getLabel } from '../internals/getLabel';
 
 const getSortingComparator = (comparator: ChartsPieSorting = 'none') => {
   if (typeof comparator === 'function') {
@@ -40,9 +41,13 @@ const formatter: Formatter<'pie'> = (params) => {
           id: item.id ?? `auto-generated-pie-id-${seriesId}-${index}`,
           ...arcs[index],
         }))
-        .map((item) => ({
+        .map((item, index) => ({
           ...item,
-          formattedValue: series[seriesId].valueFormatter?.(item) ?? item.value.toLocaleString(),
+          formattedValue:
+            series[seriesId].valueFormatter?.(
+              { ...item, label: getLabel(item.label, 'arc') },
+              { dataIndex: index },
+            ) ?? item.value.toLocaleString(),
         })),
     };
   });

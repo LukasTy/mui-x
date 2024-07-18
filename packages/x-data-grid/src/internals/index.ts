@@ -129,19 +129,12 @@ export { useGridVisibleRows, getVisibleRows } from '../hooks/utils/useGridVisibl
 export { useGridInitializeState } from '../hooks/utils/useGridInitializeState';
 export type { GridStateInitializer } from '../hooks/utils/useGridInitializeState';
 
-export type {
-  DataGridProSharedPropsWithDefaultValue,
-  DataGridPremiumSharedPropsWithDefaultValue,
-  GridExperimentalFeatures,
-  DataGridPropsWithoutDefaultValue,
-  DataGridPropsWithDefaultValues,
-  DataGridPropsWithComplexDefaultValueAfterProcessing,
-  DataGridPropsWithComplexDefaultValueBeforeProcessing,
-} from '../models/props/DataGridProps';
-
+export type * from '../models/props/DataGridProps';
+export type * from '../models/gridDataSource';
 export { getColumnsToExport, defaultGetRowsToExport } from '../hooks/features/export/utils';
 export * from '../utils/createControllablePromise';
 export { createSelector, createSelectorMemoized } from '../utils/createSelector';
+export { gridRowGroupsToFetchSelector } from '../hooks/features/rows/gridRowsSelector';
 export {
   findParentElementFromClassName,
   getActiveElement,

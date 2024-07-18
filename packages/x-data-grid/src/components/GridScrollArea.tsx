@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import {
   unstable_composeClasses as composeClasses,
@@ -97,7 +96,7 @@ function GridScrollAreaRaw(props: ScrollAreaProps) {
   const rootProps = useGridRootProps();
   const ownerState = { ...rootProps, scrollDirection };
   const classes = useUtilityClasses(ownerState);
-  const totalHeaderHeight = getTotalHeaderHeight(apiRef, rootProps.columnHeaderHeight);
+  const totalHeaderHeight = getTotalHeaderHeight(apiRef, rootProps);
   const headerHeight = Math.floor(rootProps.columnHeaderHeight * densityFactor);
 
   const style: React.CSSProperties = {
@@ -170,14 +169,4 @@ function GridScrollAreaRaw(props: ScrollAreaProps) {
   );
 }
 
-GridScrollAreaRaw.propTypes = {
-  // ----------------------------- Warning --------------------------------
-  // | These PropTypes are generated from the TypeScript type definitions |
-  // | To update them edit the TypeScript types and run "yarn proptypes"  |
-  // ----------------------------------------------------------------------
-  scrollDirection: PropTypes.oneOf(['left', 'right']).isRequired,
-} as any;
-
-const GridScrollArea = fastMemo(GridScrollAreaRaw);
-
-export { GridScrollArea };
+export const GridScrollArea = fastMemo(GridScrollAreaRaw);

@@ -151,6 +151,7 @@ const GridRow = React.forwardRef<HTMLDivElement, GridRowProps>(function GridRow(
   const handleRef = useForkRef(ref, refProp);
   const rowNode = apiRef.current.getRowNode(rowId);
   const scrollbarWidth = dimensions.hasScrollY ? dimensions.scrollbarSize : 0;
+  const gridHasFiller = dimensions.columnsTotalWidth < dimensions.viewportOuterSize.width;
 
   const hasFocusCell = focusedColumnIndex !== undefined;
   const hasVirtualFocusCellLeft =
@@ -175,13 +176,6 @@ const GridRow = React.forwardRef<HTMLDivElement, GridRowProps>(function GridRow(
   };
 
   const classes = useUtilityClasses(ownerState);
-
-  React.useLayoutEffect(() => {
-    if (rowHeight === 'auto' && ref.current && typeof ResizeObserver === 'undefined') {
-      // Fallback for IE
-      apiRef.current.unstable_storeRowHeightMeasurement(rowId, ref.current.clientHeight);
-    }
-  }, [apiRef, rowHeight, rowId]);
 
   React.useLayoutEffect(() => {
     if (currentPage.range) {
@@ -382,10 +376,11 @@ const GridRow = React.forwardRef<HTMLDivElement, GridRowProps>(function GridRow(
       return (
         <slots.skeletonCell
           key={column.field}
+          type={column.type}
           width={width}
           height={rowHeight}
           field={column.field}
-          align={column.align ?? 'left'}
+          align={column.align}
         />
       );
     }
@@ -420,6 +415,7 @@ const GridRow = React.forwardRef<HTMLDivElement, GridRowProps>(function GridRow(
         pinnedPosition={pinnedPosition}
         sectionIndex={indexInSection}
         sectionLength={sectionLength}
+        gridHasFiller={gridHasFiller}
         {...slotProps?.cell}
       />
     );
@@ -532,7 +528,7 @@ const GridRow = React.forwardRef<HTMLDivElement, GridRowProps>(function GridRow(
 GridRow.propTypes = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
-  // | To update them edit the TypeScript types and run "yarn proptypes"  |
+  // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
   dimensions: PropTypes.shape({
     bottomContainerHeight: PropTypes.number.isRequired,
@@ -543,6 +539,7 @@ GridRow.propTypes = {
     }).isRequired,
     hasScrollX: PropTypes.bool.isRequired,
     hasScrollY: PropTypes.bool.isRequired,
+    headerFilterHeight: PropTypes.number.isRequired,
     headerHeight: PropTypes.number.isRequired,
     headersTotalHeight: PropTypes.number.isRequired,
     isReady: PropTypes.bool.isRequired,

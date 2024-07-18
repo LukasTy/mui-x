@@ -86,7 +86,12 @@ After running the codemods, make sure to test your application and that you don'
 Feel free to [open an issue](https://github.com/mui/mui-x/issues/new/choose) for support if you need help to proceed with your migration.
 :::
 
-## Drop the legacy bundle
+## Breaking changes
+
+Since v7 is a major release, it contains some changes that affect the public API.
+These changes were done for consistency, improve stability and make room for new features.
+
+### Drop the legacy bundle
 
 The support for IE 11 has been removed from all MUI X packages.
 The `legacy` bundle that used to support old browsers like IE 11 is no longer included.
@@ -94,6 +99,40 @@ The `legacy` bundle that used to support old browsers like IE 11 is no longer i
 :::info
 If you need support for IE 11, you will need to keep using the latest version of the `v6` release.
 :::
+
+### Drop Webpack 4 support
+
+Dropping old browsers support also means that we no longer transpile some features that are natively supported by modern browsers – like [Nullish Coalescing](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing) and [Optional Chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining).
+
+These features are not supported by Webpack 4, so if you are using Webpack 4, you will need to transpile these features yourself or upgrade to Webpack 5.
+
+Here is an example of how you can transpile these features on Webpack 4 using the `@babel/preset-env` preset:
+
+```diff
+ // webpack.config.js
+
+ module.exports = (env) => ({
+   // ...
+   module: {
+     rules: [
+       {
+         test: /\.[jt]sx?$/,
+-        exclude: /node_modules/,
++        exclude: [
++          {
++            test: path.resolve(__dirname, 'node_modules'),
++            exclude: [
++              // Covers @mui/x-date-pickers and @mui/x-date-pickers-pro
++              path.resolve(__dirname, 'node_modules/@mui/x-date-pickers'),
++              path.resolve(__dirname, 'node_modules/@mui/x-license'),
++            ],
++          },
++        ],
+       },
+     ],
+   },
+ });
+```
 
 ## Component slots
 
@@ -225,12 +264,12 @@ The deprecated `defaultCalendarMonth` prop has been removed in favor of the more
 The new `referenceDate` prop is not limited to the default month.
 It will also impact year, day, and time.
 
-Learn more on this prop on [the `DateCalendar` documentation](/x/react-date-pickers/date-calendar/#choose-the-initial-year-month) or [the `referenceDate` documentation](/x/react-date-pickers/base-concepts/#reference-date-when-no-value-is-defined) pages.
+See [Date Calendar—Choose the initial year / month](/x/react-date-pickers/date-calendar/#choose-the-initial-year-month) or [Base concepts—Reference date when no value is defined](/x/react-date-pickers/base-concepts/#reference-date-when-no-value-is-defined) for more details.
 :::
 
 ```diff
 -<DateCalendar defaultCalendarMonth={dayjs('2022-04-01')};
-+<DateCalendar referenceDate{dayjs('2022-04-01')} />
++<DateCalendar referenceDate={dayjs('2022-04-01')} />
 ```
 
 ## Modified props
@@ -250,6 +289,15 @@ The string argument of the `dayOfWeekFormatter` prop has been replaced in favor 
 +  dayOfWeekFormatter={day => `${day.format('dd')}.`}
  />
 ```
+
+### Strict typing of the date-related props
+
+All the date-related props are now strictly typed to only accept the date format supported by your adapter
+(`Date` object for `date-fns`, `daysjs.Dayjs` object for `days-js`, etc.).
+
+:::info
+See [Base concepts—Typing of the date](/x/react-date-pickers/base-concepts/#typing-of-the-date) for more details.
+:::
 
 ## Field components
 
@@ -389,7 +437,10 @@ then you can look at the page to see all the examples improved and updated to us
 
 The headless field hooks (e.g.: `useDateField`) now return a new prop called `enableAccessibleFieldDOMStructure`.
 This is used to know if the current UI expected is built using the accessible DOM structure or not.
-Learn more about this new [accessible DOM structure](/x/react-date-pickers/fields/#accessible-dom-structure).
+
+:::info
+See [Fields—Accessible DOM structure](/x/react-date-pickers/fields/#accessible-dom-structure) for more details.
+:::
 
 When building a custom UI, you are most-likely only supporting one DOM structure, so you can remove `enableAccessibleFieldDOMStructure` before it is passed to the DOM:
 
@@ -478,7 +529,10 @@ The `dayPickerClasses` variable has been renamed `dayCalendarClasses` to be cons
 
 The `dateLibInstance` prop of `LocalizationProvider` does not work with `AdapterDayjs` anymore.
 This prop was used to set the pickers in UTC mode before the implementation of a proper timezone support in the components.
-You can learn more about the new approach on the [dedicated doc page](https://mui.com/x/react-date-pickers/timezone/).
+
+:::info
+See [Timezone](/x/react-date-pickers/timezone/) for more details.
+:::
 
 ```diff
  // When a `value` or a `defaultValue` is provided
