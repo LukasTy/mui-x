@@ -121,6 +121,11 @@
     {
       "groupName": "Vite & Vitest",
       "matchPackageNames": ["@vitejs/**", "/vitest/"]
+    },
+    {
+      "groupName": "MUI Monorepo",
+      "matchPackageNames": ["@mui/monorepo"],
+      "rebaseWhen": "conflicted"
     }
   ],
   "postUpdateOptions": ["pnpmDedupe"],
