@@ -16,7 +16,7 @@ import { renderDateViewCalendar } from '../dateViewRenderers/dateViewRenderers';
 import { usePickerTranslations } from '../hooks/usePickerTranslations';
 import { useUtils } from '../internals/hooks/useUtils';
 import { validateDateTime, extractValidationProps } from '../validation';
-import { DateOrTimeViewWithMeridiem } from '../internals/models';
+import { DateOrTimeViewWithMeridiem, PickerValue } from '../internals/models';
 import { CalendarIcon } from '../icons';
 import { UseDesktopPickerProps, useDesktopPicker } from '../internals/hooks/useDesktopPicker';
 import { PickerViewsRendererProps } from '../internals/hooks/usePicker';
@@ -49,14 +49,14 @@ const rendererInterceptor = function rendererInterceptor<
   inViewRenderers: DateTimePickerViewRenderers<DateOrTimeViewWithMeridiem, any>,
   popperView: TView,
   rendererProps: PickerViewsRendererProps<
-    PickerValidDate | null,
+    PickerValue,
     TView,
     DefaultizedProps<
       UseDesktopPickerProps<
         TView,
         TEnableAccessibleFieldDOMStructure,
         any,
-        UsePickerViewsProps<PickerValidDate | null, TView, any, {}>
+        UsePickerViewsProps<PickerValue, TView, any, {}>
       >,
       'openTo'
     >,
