@@ -24,7 +24,7 @@ import {
   resolveDateTimeFormat,
   resolveTimeViewsResponse,
 } from '../internals/utils/date-time-utils';
-import { PickerOwnerState, PickerValidDate } from '../models';
+import { PickerOwnerState } from '../models';
 import {
   renderDigitalClockTimeView,
   renderMultiSectionDigitalClockTimeView,

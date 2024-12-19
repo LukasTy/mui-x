@@ -44,7 +44,7 @@ const usePickerLayout = <TValue extends PickerValidValue, TView extends DateOrTi
   props: PickersLayoutProps<TValue, TView>,
 ): UsePickerLayoutResponse<TValue> => {
   const { ownerState: pickerOwnerState } = usePickerPrivateContext();
-  const { variant, orientation } = usePickerContext();
+  const { orientation } = usePickerContext();
   const isRtl = useRtl();
 
   const {
