@@ -260,6 +260,16 @@ const theme = createTheme({
 });
 ```
 
+## Update default `closeOnSelect` and Action Bar `actions` values
+
+The default value of the `closeOnSelect` prop has been updated to `false` for all Picker components with complex views.
+Only `<DesktopDatePicker />` and `<DesktopDateRangePicker />` have `closeOnSelect` set to `true` by default.
+
+This change goes hand in hand with the change of the default `actions` prop value for the `<PickersActionBar />` component.
+The default value of the `actions` prop has been updated to `['cancel', 'accept']` for all Picker components with complex views, except for `<DesktopDatePicker />` and `<DesktopDateRangePicker />`.
+
+If the updated values are not suitable for your use case, you can override them.
+
 ## Slots breaking changes
 
 ### Slot: `layout`
