@@ -21,15 +21,16 @@ interface RunOptions {
 
 function run(options: RunOptions) {
   const config = rae.loadConfig(options.configPath);
+  const allFiles = options.files ?? config.fileNames;
   const files =
     options.files ??
     config.fileNames.filter((file) => {
       const fileName = path.basename(file);
       return fileName.startsWith('use') || fileName[0].match(/[A-Z]/);
     });
-  const program = ts.createProgram(files, config.options);
+  const program = ts.createProgram(allFiles, config.options);
 
-  const { exports, errorCount } = findAllExports(program, files);
+  const { exports, errorCount } = findAllExports(program, allFiles);
 
   for (const exportNode of exports.filter(isPublicComponent)) {
     const componentApiReference = formatComponentData(exportNode, exports);
