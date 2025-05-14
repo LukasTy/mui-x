@@ -116,8 +116,8 @@ export function formatType(
       .join(', ')} }`;
   }
 
-  if (type instanceof rae.LiteralNode) {
-    return normalizeQuotes(type.value as string);
+  if (type instanceof rae.LiteralNode && typeof type.value === 'string') {
+    return normalizeQuotes(type.value);
   }
 
   if (type instanceof rae.ArrayNode) {
