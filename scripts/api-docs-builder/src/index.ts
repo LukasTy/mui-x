@@ -6,7 +6,7 @@ import * as inspector from 'node:inspector';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import * as rae from 'react-api-extractor';
-import kebabCase from 'lodash/kebabCase.js';
+import kebabCase from 'lodash/kebabCase';
 import ts from 'typescript';
 import { isPublicComponent, formatComponentData } from './componentHandler';
 import { isPublicHook, formatHookData } from './hookHandler';
@@ -21,7 +21,12 @@ interface RunOptions {
 
 function run(options: RunOptions) {
   const config = rae.loadConfig(options.configPath);
-  const files = options.files ?? config.fileNames;
+  const files =
+    options.files ??
+    config.fileNames.filter((file) => {
+      const fileName = path.basename(file);
+      return fileName.startsWith('use') || fileName[0].match(/[A-Z]/);
+    });
   const program = ts.createProgram(files, config.options);
 
   const { exports, errorCount } = findAllExports(program, files);
