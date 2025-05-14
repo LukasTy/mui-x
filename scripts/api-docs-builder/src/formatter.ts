@@ -116,8 +116,11 @@ export function formatType(
       .join(', ')} }`;
   }
 
-  if (type instanceof rae.LiteralNode && typeof type.value === 'string') {
-    return normalizeQuotes(type.value);
+  if (type instanceof rae.LiteralNode) {
+    if (typeof type.value === 'string') {
+      return normalizeQuotes(type.value);
+    }
+    return `${type.value}`;
   }
 
   if (type instanceof rae.ArrayNode) {
