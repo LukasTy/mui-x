@@ -5,6 +5,7 @@ packages:
   - test/e2e
   - test/regressions
   - test/performance-charts
+  - scripts/*
 
 ignoredBuiltDependencies:
   - '@mui/monorepo'

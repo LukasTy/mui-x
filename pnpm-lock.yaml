@@ -1655,6 +1655,30 @@ importers:
         version: 6.0.1
     publishDirectory: build
 
+  scripts/api-docs-builder:
+    dependencies:
+      '@types/lodash':
+        specifier: ^4.17.16
+        version: 4.17.16
+      '@types/yargs':
+        specifier: ^17.0.33
+        version: 17.0.33
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+      react-api-extractor:
+        specifier: https://pkg.pr.new/michaldudak/react-api-extractor@a8b9c7c
+        version: https://pkg.pr.new/michaldudak/react-api-extractor@a8b9c7c(typescript@5.8.3)
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.0.1
+      tsx:
+        specifier: ^4.19.4
+        version: 4.19.4
+      yargs:
+        specifier: ^17.7.2
+        version: 17.7.2
+
   test:
     devDependencies:
       '@babel/runtime':
@@ -9274,6 +9298,13 @@ packages:
   rc@1.2.8:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
+
+  react-api-extractor@https://pkg.pr.new/michaldudak/react-api-extractor@a8b9c7c:
+    resolution: {tarball: https://pkg.pr.new/michaldudak/react-api-extractor@a8b9c7c}
+    version: 1.0.0-alpha.1
+    engines: {node: '>=18'}
+    peerDependencies:
+      typescript: ^5.8
 
   react-docgen@5.4.3:
     resolution: {integrity: sha512-xlLJyOlnfr8lLEEeaDZ+X2J/KJoe6Nr9AzxnkdQWush5hz2ZSu66w6iLMOScMmxoSHWpWMn+k3v5ZiyCfcWsOA==}
@@ -19493,6 +19524,11 @@ snapshots:
       ini: 1.3.8
       minimist: 1.2.8
       strip-json-comments: 2.0.1
+
+  react-api-extractor@https://pkg.pr.new/michaldudak/react-api-extractor@a8b9c7c(typescript@5.8.3):
+    dependencies:
+      lodash: 4.17.21
+      typescript: 5.8.3
 
   react-docgen@5.4.3:
     dependencies:
