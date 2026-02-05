@@ -21,6 +21,7 @@ import { HeaderToolbarProps } from './HeaderToolbar.types';
 import { ViewSwitcher } from './view-switcher';
 import { useTranslations } from '../../internals/utils/TranslationsContext';
 import { PreferencesMenu } from './preferences-menu';
+import { AIEventCreation } from './ai-event-creation';
 import { useEventCalendarClasses } from '../EventCalendarClassesContext';
 
 const HeaderToolbarRoot = styled('header', {
@@ -114,6 +115,7 @@ export const HeaderToolbar = React.forwardRef(function HeaderToolbar(
         </HeaderToolbarLabel>
       </HeaderToolbarLeftElement>
       <HeaderToolbarActions className={classes.headerToolbarActions}>
+        <AIEventCreation />
         <PreferencesMenu />
 
         <HeaderToolbarDateNavigator className={classes.headerToolbarDateNavigator}>

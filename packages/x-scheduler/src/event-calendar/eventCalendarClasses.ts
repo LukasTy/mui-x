@@ -34,6 +34,8 @@ export interface EventCalendarClasses extends EventDialogClasses {
   viewSwitcher: string;
   /** Styles applied to the preferences menu element. */
   preferencesMenu: string;
+  /** Styles applied to the AI event creation element. */
+  aiEventCreation: string;
   /** Styles applied to the resources legend root element. */
   resourcesLegend: string;
   /** Styles applied to resources legend item elements. */
@@ -218,6 +220,7 @@ export const eventCalendarClasses: EventCalendarClasses = generateUtilityClasses
     'headerToolbarDateNavigator',
     'viewSwitcher',
     'preferencesMenu',
+    'aiEventCreation',
     'resourcesLegend',
     'resourcesLegendItem',
     'resourcesLegendItemColorDot',
@@ -316,6 +319,7 @@ const slots = {
   headerToolbarDateNavigator: ['headerToolbarDateNavigator'],
   viewSwitcher: ['viewSwitcher'],
   preferencesMenu: ['preferencesMenu'],
+  aiEventCreation: ['aiEventCreation'],
   resourcesLegend: ['resourcesLegend'],
   resourcesLegendItem: ['resourcesLegendItem'],
   resourcesLegendItemColorDot: ['resourcesLegendItemColorDot'],

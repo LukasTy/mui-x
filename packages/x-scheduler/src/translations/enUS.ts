@@ -104,4 +104,20 @@ export const enUS: SchedulerTranslations = {
 
   // General
   loading: 'Loading...',
+
+  // NaturalLanguageInput
+  naturalLanguageInputPlaceholder: 'Describe your event...',
+  naturalLanguageInputAINotAvailable: 'AI not available',
+  naturalLanguageInputPoweredBy: 'Powered by Gemini Nano',
+  naturalLanguageInputCreateEvent: 'Create event',
+
+  // AIEventCreation
+  aiEventCreationTooltip: 'Create event with AI',
+  aiEventCreationTitle: 'Create Event with AI',
+  aiEventCreationInputLabel: 'Event description',
+  aiEventCreationPlaceholder: 'e.g., Meeting with John tomorrow at 2pm for 1 hour',
+  aiEventCreationHelperText:
+    'Describe your event in natural language and AI will create it for you.',
+  aiEventCreationSubmit: 'Create Event',
+  aiEventCreationProcessing: 'Creating...',
 };

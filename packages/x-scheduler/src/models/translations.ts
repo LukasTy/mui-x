@@ -104,4 +104,19 @@ export interface SchedulerTranslations {
 
   // General
   loading: string;
+
+  // NaturalLanguageInput
+  naturalLanguageInputPlaceholder: string;
+  naturalLanguageInputAINotAvailable: string;
+  naturalLanguageInputPoweredBy: string;
+  naturalLanguageInputCreateEvent: string;
+
+  // AIEventCreation
+  aiEventCreationTooltip: string;
+  aiEventCreationTitle: string;
+  aiEventCreationInputLabel: string;
+  aiEventCreationPlaceholder: string;
+  aiEventCreationHelperText: string;
+  aiEventCreationSubmit: string;
+  aiEventCreationProcessing: string;
 }
